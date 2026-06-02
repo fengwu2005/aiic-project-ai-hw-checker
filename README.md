@@ -1,6 +1,6 @@
 # CoCode Viva：AI 协作编程作业答辩系统
 
-CoCode Viva 是一个面向“允许学生使用 AI 完成编程作业”的答辩系统。系统固定作业为 **TaskFlow 命令行任务管理器**，学生提交 zip 作业包后，系统会读取最终代码、测试、AI 交互记录和反思报告，生成有限轮次答辩问题，并输出评分参考与个人贡献比例判断。
+CoCode Viva 是一个面向“允许学生使用 AI 完成编程作业”的答辩系统。系统固定作业为 **TaskFlow Pro 智能任务管理器**，学生提交 zip 作业包后，系统会读取最终代码、测试、第一次 AI prompt、第一次 AI 回复、AI 初版代码、完整对话记录和学生报告，生成有限轮次答辩问题，并输出评分参考与个人贡献比例判断。
 
 ## 页面结构
 
@@ -70,11 +70,12 @@ TaskFlow_Submission/
   tests/
     test_taskflow.py
   ai/
-    ai_initial_prompt.md
-    ai_initial_output.md
-    interaction_log.md
+    initial_prompt.md
+    initial_response.md
+    initial_code.py
+    full_conversation.md
   report/
-    reflection.md
+    report.md
 ```
 
 文件名是系统读取材料和生成答辩问题的重要依据。
@@ -82,9 +83,9 @@ TaskFlow_Submission/
 ## 本地 skills
 
 - `ArchiveSkill`：安全解压 zip，限制路径穿越、文件数量和文件大小。
-- `FileReaderSkill`：按固定命名读取提交材料。
+- `FileReaderSkill`：按固定命名读取 README、最终代码、测试、AI 初版材料、完整对话和学生报告。
 - `CodeAnalysisSkill`：解析 Python AST，识别函数、类、导入、功能关键词和测试覆盖。
-- `InteractionSkill`：分析 AI 交互轮次、提示具体度、反思中的个人判断证据。
+- `InteractionSkill`：分析 AI 交互轮次、提示具体度、报告中的个人判断证据。
 - `QuestionSkill`：根据材料分析生成 7 个个性化答辩问题。
 - `ScoringSkill`：根据材料证据和答辩回答生成评分参考。
 
@@ -94,4 +95,3 @@ TaskFlow_Submission/
 - 可运行答辩系统：`app.py`
 - 设计说明文档：`docs/design.md`
 - 学生提交样例：`examples/taskflow_sample_submission.zip`
-

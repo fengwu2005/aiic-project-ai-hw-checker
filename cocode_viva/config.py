@@ -16,13 +16,13 @@ EXPECTED_FILES = {
     "readme": "README.md",
     "final_code": "final/taskflow.py",
     "tests": "tests/test_taskflow.py",
-    "initial_prompt": "ai/ai_initial_prompt.md",
-    "initial_output": "ai/ai_initial_output.md",
-    "interaction_log": "ai/interaction_log.md",
-    "reflection": "report/reflection.md",
+    "initial_prompt": "ai/initial_prompt.md",
+    "initial_response": "ai/initial_response.md",
+    "initial_code": "ai/initial_code.py",
+    "full_conversation": "ai/full_conversation.md",
+    "student_report": "report/report.md",
 }
 
 
 for directory in (DATA_DIR, UPLOAD_DIR, SESSION_DIR):
     directory.mkdir(parents=True, exist_ok=True)
-

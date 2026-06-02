@@ -39,6 +39,13 @@ def analyze_code(source: str, tests: str) -> dict:
         "cli_interface": "argparse" in lowered or "click" in lowered or "sys.argv" in lowered,
         "priority": "priority" in lowered or "优先级" in lowered,
         "deadline": "deadline" in lowered or "due" in lowered or "截止" in lowered,
+        "tags": "tags" in lowered or "tag" in lowered or "标签" in lowered,
+        "keyword_search": "keyword" in lowered or "search" in lowered or "query" in lowered or "关键词" in lowered,
+        "sort": "sort" in lowered or "sorted(" in lowered or "排序" in lowered,
+        "statistics": "stats" in lowered or "statistics" in lowered or "count" in lowered or "统计" in lowered,
+        "archive": "archived" in lowered or "archive" in lowered or "归档" in lowered,
+        "batch_operation": "batch" in lowered or "bulk" in lowered or "ids" in lowered or "批量" in lowered,
+        "import_export": "export_tasks" in lowered or "import_tasks" in lowered or "导入" in lowered or "导出" in lowered,
         "status_filter": "status" in lowered or "completed" in lowered or "done" in lowered,
         "id_generation": "uuid" in lowered or "next_id" in lowered or "max(" in lowered,
         "date_validation": "datetime" in lowered or "fromisoformat" in lowered or "strptime" in lowered,
@@ -52,9 +59,11 @@ def analyze_code(source: str, tests: str) -> dict:
         "delete": "delete" in tests_lowered or "删除" in tests_lowered,
         "complete": "complete" in tests_lowered or "完成" in tests_lowered,
         "filter": "filter" in tests_lowered or "筛选" in tests_lowered,
+        "search_sort": "search" in tests_lowered or "sort" in tests_lowered or "keyword" in tests_lowered,
+        "stats_archive": "stats" in tests_lowered or "archive" in tests_lowered or "archived" in tests_lowered,
+        "import_export": "export_tasks" in tests_lowered or "import_tasks" in tests_lowered,
         "invalid_input": "invalid" in tests_lowered or "error" in tests_lowered or "raises" in tests_lowered,
         "persistence": "json" in tests_lowered or "file" in tests_lowered,
     }
 
     return result
-

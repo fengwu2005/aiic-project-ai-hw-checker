@@ -36,9 +36,9 @@ async def analyze_submission(zip_path: Path) -> dict:
     code = analyze_code(materials["final_code"]["text"], materials["tests"]["text"])
     interaction = analyze_interaction(
         materials["initial_prompt"]["text"],
-        materials["initial_output"]["text"],
-        materials["interaction_log"]["text"],
-        materials["reflection"]["text"],
+        materials["initial_response"]["text"],
+        materials["full_conversation"]["text"],
+        materials["student_report"]["text"],
     )
 
     analysis = {
@@ -107,4 +107,3 @@ async def finish_defense(session_id: str, answers: dict[str, str]) -> dict:
     session["report"] = report
     save_session(session)
     return session
-

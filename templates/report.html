@@ -35,7 +35,7 @@
       <div><span>测试与验证</span><strong>{{ report.material_scores.tests }}/15</strong></div>
       <div><span>AI 协作过程</span><strong>{{ report.material_scores.process }}/15</strong></div>
       <div><span>现场答辩</span><strong>{{ report.defense_score }}/20</strong></div>
-      <div><span>反思与原创性</span><strong>{{ report.material_scores.reflection }}/10</strong></div>
+      <div><span>报告与原创性</span><strong>{{ report.material_scores["report"] }}/10</strong></div>
     </div>
   </div>
   <div>
@@ -85,4 +85,3 @@
 </section>
 {% endif %}
 {% endblock %}
-
