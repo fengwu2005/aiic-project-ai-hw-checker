@@ -1,0 +1,2 @@
+"""CoCode Viva application package."""
+

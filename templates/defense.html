@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-head">
+  <p class="eyebrow">提交与现场答辩</p>
+  <h1>上传 TaskFlow 作业包，生成个性化答辩问题</h1>
+  <p>系统会先调用本地 skills 解压并读取固定文件，再基于代码、测试和 AI 协作记录生成有限轮次提问。</p>
+</section>
+
+{% if error %}
+<div class="alert">{{ error }}</div>
+{% endif %}
+
+{% if not session %}
+<section class="section upload-band">
+  <form class="upload-box" method="post" action="/defense/upload" enctype="multipart/form-data">
+    <label for="submission">选择 zip 作业包</label>
+    <input id="submission" name="submission" type="file" accept=".zip" required>
+    <button class="primary-button" type="submit">上传并生成答辩</button>
+    <a class="secondary-button" href="/examples/taskflow_sample_submission.zip">下载样例提交包</a>
+  </form>
+  <div class="hint-list">
+    <strong>系统会读取这些固定文件</strong>
+    <span>README.md</span>
+    <span>final/taskflow.py</span>
+    <span>tests/test_taskflow.py</span>
+    <span>ai/interaction_log.md</span>
+    <span>report/reflection.md</span>
+  </div>
+</section>
+{% else %}
+<section class="section split">
+  <div>
+    <h2>材料分析摘要</h2>
+    <div class="stats">
+      <div><strong>{{ session.analysis.code.line_count }}</strong><span>有效代码行</span></div>
+      <div><strong>{{ session.analysis.code.test_count }}</strong><span>测试函数</span></div>
+      <div><strong>{{ session.analysis.interaction.rounds }}</strong><span>AI 交互轮次</span></div>
+      <div><strong>{{ session.analysis.missing|length }}</strong><span>缺失文件</span></div>
+    </div>
+    {% if session.analysis.missing %}
+    <div class="alert small">缺失文件：{{ session.analysis.missing|join("、") }}</div>
+    {% endif %}
+
+    <h3>识别到的代码特征</h3>
+    <div class="feature-grid">
+      {% for name, enabled in session.analysis.code.features.items() %}
+      <span class="{{ 'ok' if enabled else 'weak' }}">{{ name }}</span>
+      {% endfor %}
+    </div>
+
+    <h3>本地 skills 调用链</h3>
+    <ol class="flow">
+      <li>ArchiveSkill：安全解压 zip，限制路径穿越和超大文件。</li>
+      <li>FileReaderSkill：按固定命名读取代码、测试、AI 记录和反思。</li>
+      <li>CodeAnalysisSkill：解析 Python AST、功能关键词和测试覆盖。</li>
+      <li>InteractionSkill：分析提示轮次、个人思考词和反思证据。</li>
+      <li>QuestionSkill：生成面向有限答辩的个性化问题。</li>
+    </ol>
+  </div>
+
+  <form class="defense-form" method="post" action="/defense/{{ session.id }}/submit">
+    <h2>现场答辩</h2>
+    <p class="muted">请用自己的话回答。回答越能对应具体代码、测试和 AI 交互记录，评分依据越充分。</p>
+    {% for question in session.questions %}
+    <label class="question-card" for="{{ question.id }}">
+      <span>{{ question.dimension }}</span>
+      <strong>{{ loop.index }}. {{ question.text }}</strong>
+      <small>{{ question.focus }}</small>
+      <textarea id="{{ question.id }}" name="{{ question.id }}" rows="5" required></textarea>
+    </label>
+    {% endfor %}
+    <button class="primary-button wide" type="submit">提交答辩并生成报告</button>
+  </form>
+</section>
+{% endif %}
+{% endblock %}
+

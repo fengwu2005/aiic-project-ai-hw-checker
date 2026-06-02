@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <div>
+    <p class="eyebrow">固定作业题目</p>
+    <h1>TaskFlow：使用 AI 辅助实现命令行任务管理器</h1>
+    <p class="lead">
+      本作业允许并鼓励学生使用 AI 辅助编程，但最终考核不只看代码是否能运行，
+      更关注学生是否能识别 AI 代码缺陷、通过测试验证修改，并解释自己的工程判断。
+    </p>
+  </div>
+  <div class="hero-panel">
+    <strong>系统考核目标</strong>
+    <p>从最终代码、AI 交互过程、反思报告和现场答辩四类证据中，评估学生真实理解与个人贡献。</p>
+    <a class="primary-button" href="/defense">进入提交与答辩</a>
+  </div>
+</section>
+
+<section class="section">
+  <h2>一、作业背景</h2>
+  <p>
+    AI 已经能快速生成可运行代码，但这些代码经常存在结构冗长、边界处理不足、测试薄弱、
+    错误信息不清晰等问题。本作业要求学生和 AI 合作完成一个小型编程任务，并记录从
+    AI 初版到最终版本的迭代过程。
+  </p>
+</section>
+
+<section class="section grid two">
+  <div>
+    <h2>二、功能要求</h2>
+    <ul class="check-list">
+      <li>实现命令行程序 <code>taskflow.py</code>。</li>
+      <li>支持添加、删除、完成、查看任务。</li>
+      <li>任务字段至少包含：<code>id</code>、<code>title</code>、<code>priority</code>、<code>deadline</code>、<code>status</code>。</li>
+      <li>优先级只能是 <code>high</code>、<code>medium</code>、<code>low</code>。</li>
+      <li>截止日期使用 <code>YYYY-MM-DD</code> 格式，并需要校验非法日期。</li>
+      <li>任务数据保存到本地 JSON 文件。</li>
+      <li>支持按状态、优先级、截止日期筛选任务。</li>
+      <li>至少编写 8 个测试用例，覆盖正常流程和异常输入。</li>
+    </ul>
+  </div>
+  <div>
+    <h2>三、AI 协作要求</h2>
+    <ul class="check-list">
+      <li>保留第一次请求 AI 生成代码的提示词。</li>
+      <li>保留 AI 第一版输出摘要或完整输出。</li>
+      <li>至少记录 3 轮后续交互。</li>
+      <li>每轮说明：提示目标、AI 回应、发现的问题、自己的处理。</li>
+      <li>最终反思需要说明 AI 的主要问题和自己的关键贡献。</li>
+    </ul>
+  </div>
+</section>
+
+<section class="section">
+  <h2>四、固定提交格式</h2>
+  <p>请将以下结构压缩为 zip 文件上传。文件命名是答辩系统读取材料的重要依据。</p>
+  <pre class="tree"><code>TaskFlow_Submission/
+  README.md
+  final/
+    taskflow.py
+  tests/
+    test_taskflow.py
+  ai/
+    ai_initial_prompt.md
+    ai_initial_output.md
+    interaction_log.md
+  report/
+    reflection.md</code></pre>
+</section>
+
+<section class="section">
+  <h2>五、评分标准</h2>
+  <div class="rubric">
+    <div><strong>最终程序功能</strong><span>25 分</span><p>命令行功能、数据字段、JSON 持久化、筛选和异常处理。</p></div>
+    <div><strong>代码质量</strong><span>15 分</span><p>结构清晰、职责划分合理、命名可读、避免过度冗长。</p></div>
+    <div><strong>测试与验证</strong><span>15 分</span><p>至少 8 个测试，覆盖边界情况和 AI 易犯错误。</p></div>
+    <div><strong>AI 协作过程</strong><span>15 分</span><p>交互记录完整，能体现提示策略、判断和迭代。</p></div>
+    <div><strong>现场答辩</strong><span>20 分</span><p>能解释代码、测试、AI 问题和自己的修改依据。</p></div>
+    <div><strong>反思与原创性</strong><span>10 分</span><p>能具体说明 AI 局限、个人贡献和改进空间。</p></div>
+  </div>
+</section>
+
+<section class="section callout">
+  <h2>六、答辩系统如何判断原创性</h2>
+  <p>
+    系统不把“使用 AI”视为扣分项，而是检查学生是否能对 AI 输出进行审查、验证和改造。
+    如果最终代码较完整，但学生无法解释关键函数、测试意图或交互迭代原因，系统会降低个人贡献比例判断。
+  </p>
+</section>
+{% endblock %}
+

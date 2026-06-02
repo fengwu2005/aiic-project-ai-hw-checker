@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CoCode Viva</title>
+    <link rel="stylesheet" href="/static/styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/assignment">
+        <span class="brand-mark">CV</span>
+        <span>
+          <strong>CoCode Viva</strong>
+          <small>AI 协作编程作业答辩系统</small>
+        </span>
+      </a>
+      <nav class="nav">
+        <a class="{{ 'active' if page == 'assignment' else '' }}" href="/assignment">题目要求</a>
+        <a class="{{ 'active' if page == 'defense' else '' }}" href="/defense">提交与答辩</a>
+        <a class="{{ 'active' if page == 'report' else '' }}">评分报告</a>
+      </nav>
+    </header>
+    <main>
+      {% block content %}{% endblock %}
+    </main>
+  </body>
+</html>
+

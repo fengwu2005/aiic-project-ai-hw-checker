@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block content %}
+{% set report = session.report %}
+<section class="page-head">
+  <p class="eyebrow">最终评分参考</p>
+  <h1>TaskFlow 作业答辩报告</h1>
+  <p>报告基于提交材料与现场答辩回答生成，定位为助教评分参考，不替代教师最终判断。</p>
+</section>
+
+{% if not report %}
+<section class="section">
+  <div class="alert">该会话还没有提交答辩回答。</div>
+  <a class="primary-button" href="/defense">返回答辩页面</a>
+</section>
+{% else %}
+<section class="score-hero">
+  <div>
+    <span>总分</span>
+    <strong>{{ report.total }}</strong>
+    <small>/ 100</small>
+  </div>
+  <div>
+    <span>个人贡献比例估计</span>
+    <strong>{{ report.contribution }}%</strong>
+    <small>{{ report.contribution_level }}</small>
+  </div>
+</section>
+
+<section class="section grid two">
+  <div>
+    <h2>分项得分</h2>
+    <div class="score-list">
+      <div><span>最终程序功能</span><strong>{{ report.material_scores.functionality }}/25</strong></div>
+      <div><span>代码质量</span><strong>{{ report.material_scores.code_quality }}/15</strong></div>
+      <div><span>测试与验证</span><strong>{{ report.material_scores.tests }}/15</strong></div>
+      <div><span>AI 协作过程</span><strong>{{ report.material_scores.process }}/15</strong></div>
+      <div><span>现场答辩</span><strong>{{ report.defense_score }}/20</strong></div>
+      <div><span>反思与原创性</span><strong>{{ report.material_scores.reflection }}/10</strong></div>
+    </div>
+  </div>
+  <div>
+    <h2>原创性判断依据</h2>
+    <ul class="check-list">
+      {% for item in report.basis %}
+      <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+
+<section class="section grid two">
+  <div>
+    <h2>优势证据</h2>
+    <ul class="check-list">
+      {% for item in report.strengths %}
+      <li>{{ item }}</li>
+      {% else %}
+      <li>系统未识别到明显优势证据，需要教师进一步复核。</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div>
+    <h2>风险提示</h2>
+    <ul class="risk-list">
+      {% for item in report.risks %}
+      <li>{{ item }}</li>
+      {% else %}
+      <li>未发现突出风险，但仍建议抽查关键代码解释。</li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+
+<section class="section">
+  <h2>答辩逐题记录</h2>
+  <div class="answer-list">
+    {% for item in report.per_question %}
+    <article>
+      <span>{{ item.dimension }} · {{ item.score }}/{{ item.max_score }}</span>
+      <h3>{{ item.question }}</h3>
+      <p>{{ item.answer }}</p>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}
+
