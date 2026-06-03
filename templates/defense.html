@@ -2,8 +2,8 @@
 {% block content %}
 <section class="page-head">
   <p class="eyebrow">提交与现场答辩</p>
-  <h1>上传 TaskFlow 作业包，生成个性化答辩问题</h1>
-  <p>系统会先调用本地 skills 解压并读取固定文件，再基于代码、测试和 AI 协作记录生成有限轮次提问。</p>
+  <h1>上传作业包，开始 AI 答辩</h1>
+  <p>系统会先解压并读取固定文件；每轮答辩后，再结合上一轮回答和材料证据动态生成下一问。</p>
 </section>
 
 {% if error %}
@@ -15,7 +15,7 @@
   <form class="upload-box" method="post" action="/defense/upload" enctype="multipart/form-data">
     <label for="submission">选择 zip 作业包</label>
     <input id="submission" name="submission" type="file" accept=".zip" required>
-    <button class="primary-button" type="submit">上传并生成答辩</button>
+    <button class="primary-button" type="submit">上传并开始答辩</button>
     <a class="secondary-button" href="/examples/taskflow_sample_submission.zip">下载样例提交包</a>
   </form>
   <div class="hint-list">
@@ -31,6 +31,8 @@
   </div>
 </section>
 {% else %}
+{% set current_index = session.current_index or 0 %}
+{% set current_question = session.questions[current_index] if current_index < session.questions|length else None %}
 <section class="section split">
   <div>
     <h2>材料分析摘要</h2>
@@ -51,28 +53,41 @@
       {% endfor %}
     </div>
 
-    <h3>本地 skills 调用链</h3>
-    <ol class="flow">
-      <li>ArchiveSkill：安全解压 zip，限制路径穿越和超大文件。</li>
-      <li>FileReaderSkill：按固定命名读取代码、测试、AI 记录和反思。</li>
-      <li>CodeAnalysisSkill：解析 Python AST、功能关键词和测试覆盖。</li>
-      <li>InteractionSkill：分析提示轮次、个人思考词和反思证据。</li>
-      <li>QuestionSkill：生成面向有限答辩的个性化问题。</li>
-    </ol>
+    <a class="secondary-button" href="/debug/{{ session.id }}">查看后台证据</a>
   </div>
 
-  <form class="defense-form" method="post" action="/defense/{{ session.id }}/submit">
+  <form class="defense-form" method="post" action="/defense/{{ session.id }}/answer">
     <h2>现场答辩</h2>
-    <p class="muted">请用自己的话回答。回答越能对应具体代码、测试和 AI 交互记录，评分依据越充分。</p>
-    {% for question in session.questions %}
-    <label class="question-card" for="{{ question.id }}">
-      <span>{{ question.dimension }}</span>
-      <strong>{{ loop.index }}. {{ question.text }}</strong>
-      <small>{{ question.focus }}</small>
-      <textarea id="{{ question.id }}" name="{{ question.id }}" rows="5" required></textarea>
+    <p class="muted">第 {{ current_index + 1 }} 轮，最多 7 轮。系统会根据上一轮回答动态决定下一问。</p>
+    {% if current_question %}
+    <label class="question-card" for="answer">
+      <span>{{ current_question.dimension }}</span>
+      <strong>{{ current_question.text }}</strong>
+      <small>{{ current_question.focus }}</small>
+      <textarea id="answer" name="answer" rows="9" required autofocus></textarea>
     </label>
-    {% endfor %}
-    <button class="primary-button wide" type="submit">提交答辩并生成报告</button>
+    <button class="primary-button wide" type="submit">提交本题回答</button>
+    {% else %}
+    <p>答辩已完成。</p>
+    <a class="primary-button wide" href="/report/{{ session.id }}">查看评分报告</a>
+    {% endif %}
+
+    {% if session.answers %}
+    <details class="history-box">
+      <summary>已回答 {{ session.answers|length }} 题</summary>
+      <div class="answer-list">
+        {% for question in session.questions %}
+        {% if session.answers.get(question.id) %}
+        <article>
+          <span>{{ question.dimension }}</span>
+          <h3>{{ question.text }}</h3>
+          <p>{{ session.answers.get(question.id) }}</p>
+        </article>
+        {% endif %}
+        {% endfor %}
+      </div>
+    </details>
+    {% endif %}
   </form>
 </section>
 {% endif %}

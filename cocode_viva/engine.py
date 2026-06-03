@@ -4,8 +4,9 @@ import json
 import uuid
 from pathlib import Path
 
+from cocode_viva.agent import DefenseAgent
 from cocode_viva.config import SESSION_DIR, UPLOAD_DIR
-from cocode_viva.llm_client import LLMClient
+from cocode_viva.debug_log import log_event, write_snapshot
 from cocode_viva.skills.archive_skill import safe_extract_zip
 from cocode_viva.skills.code_analysis_skill import analyze_code
 from cocode_viva.skills.file_reader_skill import read_expected_materials
@@ -14,11 +15,15 @@ from cocode_viva.skills.question_skill import generate_questions
 from cocode_viva.skills.scoring_skill import build_report
 
 
+MAX_DEFENSE_ROUNDS = 7
+
+
 def _session_path(session_id: str) -> Path:
     return SESSION_DIR / f"{session_id}.json"
 
 
 def save_session(session: dict) -> None:
+    SESSION_DIR.mkdir(parents=True, exist_ok=True)
     _session_path(session["id"]).write_text(json.dumps(session, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
@@ -28,10 +33,15 @@ def load_session(session_id: str) -> dict:
 
 async def analyze_submission(zip_path: Path) -> dict:
     session_id = uuid.uuid4().hex[:12]
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     extract_dir = UPLOAD_DIR / session_id
     extracted = safe_extract_zip(zip_path, extract_dir)
     read_result = read_expected_materials(extract_dir)
     materials = read_result["materials"]
+    material_texts = {
+        key: value["text"]
+        for key, value in materials.items()
+    }
 
     code = analyze_code(materials["final_code"]["text"], materials["tests"]["text"])
     interaction = analyze_interaction(
@@ -58,52 +68,191 @@ async def analyze_submission(zip_path: Path) -> dict:
         "interaction": interaction,
     }
 
-    questions = generate_questions(analysis)
-    llm_questions = await _maybe_generate_llm_questions(analysis)
-    if llm_questions:
-        questions = llm_questions
+    question_pool = generate_questions(analysis)
+    questions = question_pool[:1]
+    agent = DefenseAgent()
+    agent_tool_results = []
+    if agent.enabled:
+        llm_question, agent_tool_results = await agent.generate_initial_question(analysis, material_texts)
+        if llm_question:
+            questions = [llm_question]
 
     session = {
         "id": session_id,
         "analysis": analysis,
+        "material_texts": material_texts,
         "questions": questions,
+        "question_pool": question_pool,
+        "agent_tool_results": agent_tool_results,
+        "current_index": 0,
         "answers": {},
         "report": None,
     }
     save_session(session)
+    log_event(session_id, "submission_analyzed", {
+        "extracted_files": extracted,
+        "missing": analysis["missing"],
+        "line_count": code["line_count"],
+        "test_count": code["test_count"],
+        "interaction_rounds": interaction["rounds"],
+        "agent_enabled": agent.enabled,
+    })
+    write_snapshot(session_id, "analysis", analysis)
+    write_snapshot(session_id, "questions", {"questions": questions, "question_pool": question_pool})
+    if agent_tool_results:
+        write_snapshot(session_id, "question_agent_tool_results", {"tool_results": agent_tool_results})
     return session
 
 
-async def _maybe_generate_llm_questions(analysis: dict) -> list[dict] | None:
-    client = LLMClient()
-    if not client.enabled:
-        return None
+def _answer_is_weak(answer: str) -> bool:
+    stripped = answer.strip()
+    if len(stripped) < 40:
+        return True
+    useful_terms = ["函数", "测试", "代码", "原因", "验证", "修改", "AI", "json", "id", "导入", "异常"]
+    return not any(term.lower() in stripped.lower() for term in useful_terms)
 
-    system = "你是计算机专业课程助教，请基于提交材料分析生成可解释的现场答辩问题。只输出 JSON。"
-    user = json.dumps({
-        "task": "生成 7 个答辩问题，覆盖代码理解、AI 协作、测试验证、边界情况和原创性。输出格式：{\"questions\":[{\"id\":\"q1\",\"dimension\":\"...\",\"text\":\"...\",\"focus\":\"...\"}]}",
-        "analysis": analysis,
-    }, ensure_ascii=False)
-    result = await client.chat_json(system, user)
-    questions = (result or {}).get("questions")
-    if isinstance(questions, list) and len(questions) >= 5:
-        normalized = []
-        for index, item in enumerate(questions[:7], start=1):
-            normalized.append({
-                "id": f"q{index}",
-                "dimension": str(item.get("dimension", "综合能力")),
-                "text": str(item.get("text", "")).strip(),
-                "focus": str(item.get("focus", "考察学生对提交材料的真实理解。")),
+
+def _build_followup_question(previous_question: dict, answer: str, question_id: str) -> dict:
+    return {
+        "id": question_id,
+        "dimension": "深度追问",
+        "is_followup": True,
+        "text": (
+            "上一问的回答没有提供足够证据。请直接结合具体文件、函数或测试回答："
+            f"{previous_question['text']} "
+            "要求至少说明一个代码位置、一个验证方式，以及你本人做出的一个取舍。"
+        ),
+        "focus": "追问回答是否能落到代码、测试和个人贡献证据。",
+        "evidence": previous_question.get("evidence", ""),
+    }
+
+
+async def _build_next_question(session: dict, previous_question: dict, answer: str) -> tuple[dict | None, list[dict]]:
+    questions = session.get("questions", [])
+    answers = session.get("answers", {})
+    next_id = f"q{len(questions) + 1}"
+    agent = DefenseAgent()
+    if agent.enabled:
+        question, tool_results = await agent.generate_next_question(
+            session["analysis"],
+            session.get("material_texts", {}),
+            questions,
+            answers,
+            previous_question,
+            answer,
+            next_id,
+        )
+        if question:
+            return question, tool_results
+
+    asked_text = {question.get("text") for question in questions}
+
+    if _answer_is_weak(answer) and not previous_question.get("is_followup"):
+        return _build_followup_question(previous_question, answer, next_id), []
+
+    for candidate in session.get("question_pool", []):
+        if candidate.get("text") not in asked_text:
+            candidate = dict(candidate)
+            candidate["id"] = next_id
+            return candidate, []
+    return None, []
+
+
+async def submit_single_answer(session_id: str, answer: str) -> dict:
+    session = load_session(session_id)
+    if session.get("report"):
+        return session
+
+    current_index = int(session.get("current_index", 0))
+    questions = session.get("questions", [])
+    if current_index >= len(questions):
+        return await finish_defense(session_id, session.get("answers", {}))
+
+    question = questions[current_index]
+    session.setdefault("answers", {})[question["id"]] = answer.strip()
+    log_event(session_id, "answer_submitted", {
+        "question_id": question["id"],
+        "question_dimension": question.get("dimension"),
+        "answer_chars": len(answer.strip()),
+        "answer_preview": answer.strip()[:300],
+        "current_index": current_index,
+    })
+
+    if len(questions) < MAX_DEFENSE_ROUNDS:
+        next_question, next_tool_results = await _build_next_question(session, question, answer)
+        if next_question:
+            questions.append(next_question)
+            log_event(session_id, "next_question_generated", {
+                "after_question_id": question["id"],
+                "next_question_id": next_question["id"],
+                "dimension": next_question.get("dimension"),
+                "weak_answer": _answer_is_weak(answer),
+                "agent_tools": len(next_tool_results),
             })
-        if all(item["text"] for item in normalized):
-            return normalized
-    return None
+            if next_tool_results:
+                session.setdefault("next_question_tool_results", []).append({
+                    "after_question_id": question["id"],
+                    "tool_results": next_tool_results,
+                })
+
+    session["questions"] = questions
+    session["current_index"] = current_index + 1
+    save_session(session)
+
+    if session["current_index"] >= len(session["questions"]):
+        return await finish_defense(session_id, session["answers"])
+    return session
 
 
 async def finish_defense(session_id: str, answers: dict[str, str]) -> dict:
     session = load_session(session_id)
     session["answers"] = answers
     report = build_report(session["analysis"], session["questions"], answers)
+    log_event(session_id, "rule_report_generated", {
+        "total": report["total"],
+        "raw_total": report.get("raw_total"),
+        "defense_score": report["defense_score"],
+        "defense_validity": report.get("defense_validity"),
+        "contribution": report["contribution"],
+    })
+    agent = DefenseAgent()
+    if agent.enabled:
+        overlay, report_tool_results = await agent.generate_report(
+            session["analysis"],
+            session.get("material_texts", {}),
+            session["questions"],
+            answers,
+            report,
+        )
+        session["report_agent_tool_results"] = report_tool_results
+        if report_tool_results:
+            write_snapshot(session_id, "report_agent_tool_results", {"tool_results": report_tool_results})
+        if overlay:
+            report["agent_overlay"] = overlay
+            write_snapshot(session_id, "agent_report_overlay", overlay)
+            if overlay.get("contribution") is not None and report.get("defense_validity") not in {"invalid", "weak"}:
+                report["contribution"] = overlay["contribution"]
+            if overlay.get("contribution_level") and report.get("defense_validity") not in {"invalid", "weak"}:
+                report["contribution_level"] = overlay["contribution_level"]
+            if overlay.get("strengths") and report.get("defense_validity") not in {"invalid", "weak"}:
+                report["strengths"] = overlay["strengths"]
+            if overlay.get("risks"):
+                guard_risks = []
+                if report.get("cap_note"):
+                    guard_risks.append(report["cap_note"])
+                report["risks"] = guard_risks + overlay["risks"]
+            if overlay.get("basis"):
+                report["basis"] = overlay["basis"]
     session["report"] = report
     save_session(session)
+    write_snapshot(session_id, "final_questions", {
+        "questions": session.get("questions", []),
+        "answers": session.get("answers", {}),
+    })
+    write_snapshot(session_id, "final_report", report)
+    log_event(session_id, "final_report_saved", {
+        "total": report["total"],
+        "defense_validity": report.get("defense_validity"),
+        "contribution": report["contribution"],
+    })
     return session

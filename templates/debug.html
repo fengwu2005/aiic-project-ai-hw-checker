@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-head">
+  <p class="eyebrow">后台证据面板</p>
+  <h1>Agent 与本地工具证据</h1>
+  <p>此页面用于教师或演示者复核系统依据，不在学生答辩主流程中展示。</p>
+</section>
+
+<section class="section grid two">
+  <div>
+    <h2>材料摘要</h2>
+    <div class="stats">
+      <div><strong>{{ session.analysis.code.line_count }}</strong><span>有效代码行</span></div>
+      <div><strong>{{ session.analysis.code.test_count }}</strong><span>测试函数</span></div>
+      <div><strong>{{ session.analysis.interaction.rounds }}</strong><span>AI 交互轮次</span></div>
+      <div><strong>{{ session.analysis.missing|length }}</strong><span>缺失文件</span></div>
+    </div>
+  </div>
+  <div>
+    <h2>工具链</h2>
+    <ol class="flow">
+      <li>ArchiveSkill：安全解压 zip。</li>
+      <li>FileReaderSkill：按固定命名读取材料。</li>
+      <li>CodeAnalysisSkill：解析代码和测试特征。</li>
+      <li>InteractionSkill：分析 AI 协作记录。</li>
+      <li>AgentToolSkill：为 AI 提供受控读取、搜索和比较工具。</li>
+      <li>DefenseAgent：基于证据生成问题和评分参考。</li>
+    </ol>
+  </div>
+</section>
+
+<section class="section">
+  <h2>本地日志事件</h2>
+  <div class="answer-list">
+    {% for event in events %}
+    <article class="log-event">
+      <span>{{ event.ts }} · {{ event.event }}</span>
+      <p>{{ event.summary }}</p>
+      <details>
+        <summary>查看完整 payload</summary>
+        <pre class="mini-pre">{{ event.payload_json }}</pre>
+      </details>
+    </article>
+    {% else %}
+    <article>
+      <p>暂无日志事件。</p>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="section">
+  <h2>快照文件</h2>
+  <div class="hint-list">
+    {% for item in snapshots %}
+    <span>{{ item }}</span>
+    {% else %}
+    <span>暂无快照</span>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="section">
+  <h2>代码特征</h2>
+  <div class="feature-grid">
+    {% for name, enabled in session.analysis.code.features.items() %}
+    <span class="{{ 'ok' if enabled else 'weak' }}">{{ name }}</span>
+    {% endfor %}
+  </div>
+</section>
+
+{% if session.agent_tool_results %}
+<section class="section">
+  <h2>问题生成阶段工具调用</h2>
+  <div class="tool-log">
+    {% for item in session.agent_tool_results %}
+    <div>
+      <strong>{{ item.tool }}</strong>
+      <span>{{ "成功" if item.ok else "失败" }}</span>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if session.report_agent_tool_results %}
+<section class="section">
+  <h2>报告生成阶段工具调用</h2>
+  <div class="tool-log">
+    {% for item in session.report_agent_tool_results %}
+    <div>
+      <strong>{{ item.tool }}</strong>
+      <span>{{ "成功" if item.ok else "失败" }}</span>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if session.next_question_tool_results %}
+<section class="section">
+  <h2>动态追问工具调用</h2>
+  <div class="tool-log">
+    {% for group in session.next_question_tool_results %}
+    <div>
+      <strong>{{ group.after_question_id }}</strong>
+      <span>{{ group.tool_results|length }} 次调用</span>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="section">
+  <h2>答辩记录</h2>
+  <div class="answer-list">
+    {% for question in session.questions %}
+    <article>
+      <span>{{ question.dimension }}</span>
+      <h3>{{ question.text }}</h3>
+      <p>{{ session.answers.get(question.id, "未回答") }}</p>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

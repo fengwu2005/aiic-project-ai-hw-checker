@@ -9,7 +9,8 @@ from aiohttp import web
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from cocode_viva.config import PROJECT_ROOT, STATIC_DIR, TEMPLATE_DIR, UPLOAD_DIR
-from cocode_viva.engine import analyze_submission, finish_defense, load_session
+from cocode_viva.debug_log import format_events_for_view, list_snapshots, read_events
+from cocode_viva.engine import analyze_submission, finish_defense, load_session, submit_single_answer
 from cocode_viva.skills.archive_skill import ArchiveError
 
 
@@ -42,6 +43,7 @@ async def upload_submission(request: web.Request) -> web.Response:
     if not filename.lower().endswith(".zip"):
         return render("defense.html", page="defense", session=None, error="文件格式必须是 .zip。")
 
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     temp_path = UPLOAD_DIR / f"{uuid.uuid4().hex}.zip"
     try:
         with temp_path.open("wb") as output:
@@ -69,6 +71,16 @@ async def submit_defense(request: web.Request) -> web.Response:
     raise web.HTTPFound(f"/report/{session_id}")
 
 
+async def submit_answer(request: web.Request) -> web.Response:
+    session_id = request.match_info["session_id"]
+    data = await request.post()
+    answer = str(data.get("answer", ""))
+    session = await submit_single_answer(session_id, answer)
+    if session.get("report"):
+        raise web.HTTPFound(f"/report/{session_id}")
+    return render("defense.html", page="defense", session=session, error=None)
+
+
 async def report(request: web.Request) -> web.Response:
     session_id = request.match_info["session_id"]
     try:
@@ -76,6 +88,21 @@ async def report(request: web.Request) -> web.Response:
     except FileNotFoundError:
         raise web.HTTPNotFound(text="报告不存在")
     return render("report.html", page="report", session=session)
+
+
+async def debug_session(request: web.Request) -> web.Response:
+    session_id = request.match_info["session_id"]
+    try:
+        session = load_session(session_id)
+    except FileNotFoundError:
+        raise web.HTTPNotFound(text="后台证据不存在")
+    return render(
+        "debug.html",
+        page="debug",
+        session=session,
+        events=format_events_for_view(read_events(session_id)),
+        snapshots=list_snapshots(session_id),
+    )
 
 
 async def download_sample(request: web.Request) -> web.FileResponse:
@@ -89,8 +116,10 @@ def create_app() -> web.Application:
     app.router.add_get("/assignment", assignment)
     app.router.add_get("/defense", defense)
     app.router.add_post("/defense/upload", upload_submission)
+    app.router.add_post("/defense/{session_id}/answer", submit_answer)
     app.router.add_post("/defense/{session_id}/submit", submit_defense)
     app.router.add_get("/report/{session_id}", report)
+    app.router.add_get("/debug/{session_id}", debug_session)
     app.router.add_get("/examples/taskflow_sample_submission.zip", download_sample)
     app.router.add_static("/static", STATIC_DIR)
     return app
