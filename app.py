@@ -3,7 +3,7 @@ from __future__ import annotations
 import shutil
 import uuid
 import argparse
-from pathlib import Path
+import socket
 
 from aiohttp import web
 from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -125,10 +125,27 @@ def create_app() -> web.Application:
     return app
 
 
+def _first_available_port(host: str, preferred: int) -> int:
+    for port in range(preferred, preferred + 20):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            try:
+                sock.bind((host, port))
+            except OSError:
+                continue
+            return port
+    raise OSError(f"No available port found from {preferred} to {preferred + 19}.")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run CoCode Viva")
     parser.add_argument("--port", type=int, default=8000)
+    parser.add_argument("--host", default="127.0.0.1")
     args = parser.parse_args()
     shutil.rmtree(UPLOAD_DIR, ignore_errors=True)
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-    web.run_app(create_app(), host="127.0.0.1", port=args.port)
+    port = _first_available_port(args.host, args.port)
+    if port != args.port:
+        print(f"Port {args.port} is already in use. CoCode Viva will use {port} instead.")
+    print(f"Open http://{args.host}:{port}")
+    web.run_app(create_app(), host=args.host, port=port)

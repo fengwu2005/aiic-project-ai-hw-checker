@@ -22,7 +22,6 @@
     <strong>系统会读取这些固定文件</strong>
     <span>README.md</span>
     <span>final/taskflow.py</span>
-    <span>tests/test_taskflow.py</span>
     <span>ai/initial_prompt.md</span>
     <span>ai/initial_response.md</span>
     <span>ai/initial_code.py</span>
@@ -38,9 +37,17 @@
     <h2>材料分析摘要</h2>
     <div class="stats">
       <div><strong>{{ session.analysis.code.line_count }}</strong><span>有效代码行</span></div>
-      <div><strong>{{ session.analysis.code.test_count }}</strong><span>测试函数</span></div>
+      <div><strong>{{ session.analysis.execution.passed }}/{{ session.analysis.execution.total }}</strong><span>隐藏验收</span></div>
       <div><strong>{{ session.analysis.interaction.rounds }}</strong><span>AI 交互轮次</span></div>
       <div><strong>{{ session.analysis.missing|length }}</strong><span>缺失文件</span></div>
+    </div>
+    <div class="callout-inline">
+      当前模式：
+      {% if session.agent_enabled %}
+      API Agent 模式
+      {% else %}
+      本地规则模式
+      {% endif %}
     </div>
     {% if session.analysis.missing %}
     <div class="alert small">缺失文件：{{ session.analysis.missing|join("、") }}</div>
@@ -52,13 +59,11 @@
       <span class="{{ 'ok' if enabled else 'weak' }}">{{ name }}</span>
       {% endfor %}
     </div>
-
-    <a class="secondary-button" href="/debug/{{ session.id }}">查看后台证据</a>
   </div>
 
   <form class="defense-form" method="post" action="/defense/{{ session.id }}/answer">
     <h2>现场答辩</h2>
-    <p class="muted">第 {{ current_index + 1 }} 轮，最多 7 轮。系统会根据上一轮回答动态决定下一问。</p>
+    <p class="muted">第 {{ current_index + 1 }} 轮，最多 7 轮。AI 助教会结合历史回答、材料证据和隐藏验收结果，决定继续追问、换题或提前结束。</p>
     {% if current_question %}
     <label class="question-card" for="answer">
       <span>{{ current_question.dimension }}</span>

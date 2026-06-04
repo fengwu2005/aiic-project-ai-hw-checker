@@ -1,5 +1,6 @@
 {
   "OPENAI_API_KEY": "在这里填你的 API Key",
   "OPENAI_BASE_URL": "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
-  "OPENAI_MODEL": "qwen3.5-122b-a10b"
+  "OPENAI_MODEL": "qwen3.5-122b-a10b",
+  "OPENAI_TIMEOUT_SECONDS": "45"
 }

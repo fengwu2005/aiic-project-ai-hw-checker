@@ -15,7 +15,6 @@ MAX_EXTRACTED_FILES = 80
 EXPECTED_FILES = {
     "readme": "README.md",
     "final_code": "final/taskflow.py",
-    "tests": "tests/test_taskflow.py",
     "initial_prompt": "ai/initial_prompt.md",
     "initial_response": "ai/initial_response.md",
     "initial_code": "ai/initial_code.py",

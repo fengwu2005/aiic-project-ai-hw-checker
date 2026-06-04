@@ -24,19 +24,20 @@ python final/taskflow.py export backup.json
 python final/taskflow.py import backup.json
 ```
 
-## 测试
+## 自查方式
 
 ```bash
-python -m pytest tests/test_taskflow.py
+python final/taskflow.py add "finish report" --priority high --deadline 2026-06-10
+python final/taskflow.py list --priority high
+python final/taskflow.py stats
 ```
 
 ## 已知限制
 
 - 当前版本只使用本地 JSON 文件，不支持多用户并发写入。
 - 导入重复 id 时会重新分配 id，但没有保留完整冲突日志。
-- 命令行输出为 JSON，适合自动化测试，但交互体验还可以继续优化。
+- 命令行输出为 JSON，便于系统隐藏验收读取行为，但交互体验还可以继续优化。
 
 ## AI 使用说明
 
-我保留了第一次 prompt、第一次 AI 回复、第一次 AI 代码和后续完整对话。AI 初版提供了基础 argparse 和 JSON 持久化框架，但缺少高级筛选、导入导出、批量操作和严谨测试。我主要修改了数据模型、校验入口、测试隔离、导入导出冲突处理和统计逻辑。
-
+我保留了第一次 prompt、第一次 AI 回复、第一次 AI 代码和后续完整对话。AI 初版提供了基础 argparse 和 JSON 持久化框架，但缺少高级筛选、导入导出、批量操作和稳定的函数接口。我主要修改了数据模型、校验入口、验收隔离参数、导入导出冲突处理和统计逻辑。

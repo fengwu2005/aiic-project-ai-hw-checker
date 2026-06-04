@@ -1,10 +1,7 @@
 from __future__ import annotations
 
 import ast
-import re
-
-
-def analyze_code(source: str, tests: str) -> dict:
+def analyze_code(source: str) -> dict:
     result = {
         "line_count": len([line for line in source.splitlines() if line.strip()]),
         "functions": [],
@@ -13,9 +10,6 @@ def analyze_code(source: str, tests: str) -> dict:
         "syntax_ok": True,
         "syntax_error": "",
         "features": {},
-        "test_count": 0,
-        "assert_count": len(re.findall(r"\bassert\b|self\.assert", tests)),
-        "test_features": {},
     }
 
     try:
@@ -50,20 +44,6 @@ def analyze_code(source: str, tests: str) -> dict:
         "id_generation": "uuid" in lowered or "next_id" in lowered or "max(" in lowered,
         "date_validation": "datetime" in lowered or "fromisoformat" in lowered or "strptime" in lowered,
         "error_handling": "try:" in lowered and "except" in lowered,
-    }
-
-    tests_lowered = tests.lower()
-    result["test_count"] = len(re.findall(r"def\s+test_", tests))
-    result["test_features"] = {
-        "add": "add" in tests_lowered or "添加" in tests_lowered,
-        "delete": "delete" in tests_lowered or "删除" in tests_lowered,
-        "complete": "complete" in tests_lowered or "完成" in tests_lowered,
-        "filter": "filter" in tests_lowered or "筛选" in tests_lowered,
-        "search_sort": "search" in tests_lowered or "sort" in tests_lowered or "keyword" in tests_lowered,
-        "stats_archive": "stats" in tests_lowered or "archive" in tests_lowered or "archived" in tests_lowered,
-        "import_export": "export_tasks" in tests_lowered or "import_tasks" in tests_lowered,
-        "invalid_input": "invalid" in tests_lowered or "error" in tests_lowered or "raises" in tests_lowered,
-        "persistence": "json" in tests_lowered or "file" in tests_lowered,
     }
 
     return result

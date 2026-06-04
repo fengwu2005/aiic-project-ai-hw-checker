@@ -40,7 +40,7 @@
     <div class="score-list">
       <div><span>最终程序功能</span><strong>{{ report.material_scores.functionality }}/25</strong></div>
       <div><span>代码质量</span><strong>{{ report.material_scores.code_quality }}/15</strong></div>
-      <div><span>测试与验证</span><strong>{{ report.material_scores.tests }}/15</strong></div>
+      <div><span>系统验收与验证</span><strong>{{ report.material_scores.validation }}/15</strong></div>
       <div><span>AI 协作过程</span><strong>{{ report.material_scores.process }}/15</strong></div>
       <div><span>现场答辩有效性</span><strong>{{ report.defense_score }}/20</strong></div>
       <div><span>报告与原创性</span><strong>{{ report.material_scores["report"] }}/10</strong></div>
@@ -91,10 +91,5 @@
 </section>
 {% endif %}
 
-<section class="section">
-  <h2>后台证据</h2>
-  <p>工具调用、逐题记录和 Agent 细节已隐藏在后台证据面板，避免学生答辩主流程暴露系统内部判断链。</p>
-  <a class="secondary-button" href="/debug/{{ session.id }}">查看后台证据</a>
-</section>
 {% endif %}
 {% endblock %}

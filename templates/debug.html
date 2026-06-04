@@ -1,119 +1,181 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="page-head">
-  <p class="eyebrow">后台证据面板</p>
-  <h1>Agent 与本地工具证据</h1>
-  <p>此页面用于教师或演示者复核系统依据，不在学生答辩主流程中展示。</p>
+{% set execution = session.analysis.execution %}
+{% set report = session.report %}
+{% set initial_tools = session.agent_tool_results or [] %}
+{% set report_tools = session.report_agent_tool_results or [] %}
+{% set next_groups = session.next_question_tool_results or [] %}
+
+<section class="page-head compact-head">
+  <p class="eyebrow">后台证据</p>
+  <h1>一次会话的完整证据链</h1>
+  <p>用于教师复核：材料读取、隐藏验收、Agent 工具调用、日志快照与答辩记录都在这里。</p>
 </section>
 
-<section class="section grid two">
+<section class="debug-summary">
   <div>
-    <h2>材料摘要</h2>
-    <div class="stats">
-      <div><strong>{{ session.analysis.code.line_count }}</strong><span>有效代码行</span></div>
-      <div><strong>{{ session.analysis.code.test_count }}</strong><span>测试函数</span></div>
-      <div><strong>{{ session.analysis.interaction.rounds }}</strong><span>AI 交互轮次</span></div>
-      <div><strong>{{ session.analysis.missing|length }}</strong><span>缺失文件</span></div>
-    </div>
+    <span>模式</span>
+    <strong>{{ "API Agent" if session.agent_enabled else "本地规则" }}</strong>
   </div>
   <div>
-    <h2>工具链</h2>
-    <ol class="flow">
-      <li>ArchiveSkill：安全解压 zip。</li>
-      <li>FileReaderSkill：按固定命名读取材料。</li>
-      <li>CodeAnalysisSkill：解析代码和测试特征。</li>
-      <li>InteractionSkill：分析 AI 协作记录。</li>
-      <li>AgentToolSkill：为 AI 提供受控读取、搜索和比较工具。</li>
-      <li>DefenseAgent：基于证据生成问题和评分参考。</li>
+    <span>隐藏验收</span>
+    <strong>{{ execution.passed }}/{{ execution.total }}</strong>
+  </div>
+  <div>
+    <span>AI 交互</span>
+    <strong>{{ session.analysis.interaction.rounds }} 轮</strong>
+  </div>
+  <div>
+    <span>缺失文件</span>
+    <strong>{{ session.analysis.missing|length }}</strong>
+  </div>
+  <div>
+    <span>最终分数</span>
+    <strong>{{ report.total if report else "未生成" }}</strong>
+  </div>
+</section>
+
+<section class="debug-grid">
+  <article class="debug-card">
+    <div class="card-head">
+      <h2>材料与流程</h2>
+      <span>{{ session.analysis.code.line_count }} 行代码</span>
+    </div>
+    <ol class="compact-flow">
+      <li>安全解压 zip</li>
+      <li>读取固定 7 个文件</li>
+      <li>静态分析最终代码</li>
+      <li>执行教师隐藏验收</li>
+      <li>API Agent 基于工具证据追问与评分</li>
     </ol>
-  </div>
-</section>
+    {% if session.analysis.missing %}
+    <div class="alert small">缺失文件：{{ session.analysis.missing|join("、") }}</div>
+    {% endif %}
+  </article>
 
-<section class="section">
-  <h2>本地日志事件</h2>
-  <div class="answer-list">
-    {% for event in events %}
-    <article class="log-event">
-      <span>{{ event.ts }} · {{ event.event }}</span>
-      <p>{{ event.summary }}</p>
-      <details>
-        <summary>查看完整 payload</summary>
-        <pre class="mini-pre">{{ event.payload_json }}</pre>
+  <article class="debug-card">
+    <div class="card-head">
+      <h2>隐藏验收</h2>
+      <span>{{ execution.status }}</span>
+    </div>
+    <div class="compact-list">
+      {% for case in execution.cases %}
+      <details class="{{ 'ok-detail' if case.ok else 'bad-detail' }}">
+        <summary>
+          <strong>{{ case.name }}</strong>
+          <span>{{ "通过" if case.ok else "失败" }}</span>
+        </summary>
+        {% if case.detail %}<p>{{ case.detail }}</p>{% else %}<p>无额外错误信息。</p>{% endif %}
       </details>
-    </article>
-    {% else %}
-    <article>
-      <p>暂无日志事件。</p>
-    </article>
-    {% endfor %}
-  </div>
-</section>
-
-<section class="section">
-  <h2>快照文件</h2>
-  <div class="hint-list">
-    {% for item in snapshots %}
-    <span>{{ item }}</span>
-    {% else %}
-    <span>暂无快照</span>
-    {% endfor %}
-  </div>
-</section>
-
-<section class="section">
-  <h2>代码特征</h2>
-  <div class="feature-grid">
-    {% for name, enabled in session.analysis.code.features.items() %}
-    <span class="{{ 'ok' if enabled else 'weak' }}">{{ name }}</span>
-    {% endfor %}
-  </div>
-</section>
-
-{% if session.agent_tool_results %}
-<section class="section">
-  <h2>问题生成阶段工具调用</h2>
-  <div class="tool-log">
-    {% for item in session.agent_tool_results %}
-    <div>
-      <strong>{{ item.tool }}</strong>
-      <span>{{ "成功" if item.ok else "失败" }}</span>
+      {% endfor %}
     </div>
-    {% endfor %}
-  </div>
-</section>
-{% endif %}
+  </article>
 
-{% if session.report_agent_tool_results %}
-<section class="section">
-  <h2>报告生成阶段工具调用</h2>
-  <div class="tool-log">
-    {% for item in session.report_agent_tool_results %}
-    <div>
-      <strong>{{ item.tool }}</strong>
-      <span>{{ "成功" if item.ok else "失败" }}</span>
+  <article class="debug-card">
+    <div class="card-head">
+      <h2>代码特征</h2>
+      <span>{{ session.analysis.code.functions|length }} 个函数</span>
     </div>
-    {% endfor %}
-  </div>
-</section>
-{% endif %}
-
-{% if session.next_question_tool_results %}
-<section class="section">
-  <h2>动态追问工具调用</h2>
-  <div class="tool-log">
-    {% for group in session.next_question_tool_results %}
-    <div>
-      <strong>{{ group.after_question_id }}</strong>
-      <span>{{ group.tool_results|length }} 次调用</span>
+    <div class="feature-grid compact">
+      {% for name, enabled in session.analysis.code.features.items() %}
+      <span class="{{ 'ok' if enabled else 'weak' }}">{{ name }}</span>
+      {% endfor %}
     </div>
-    {% endfor %}
-  </div>
+  </article>
 </section>
-{% endif %}
 
-<section class="section">
-  <h2>答辩记录</h2>
-  <div class="answer-list">
+<section class="debug-grid two-wide">
+  <article class="debug-card">
+    <div class="card-head">
+      <h2>Agent 工具调用</h2>
+      <span>{{ initial_tools|length + report_tools|length }} 次主要调用</span>
+    </div>
+    <div class="tool-matrix">
+      <div>
+        <strong>首问生成</strong>
+        <span>{{ initial_tools|length }} 次</span>
+      </div>
+      <div>
+        <strong>动态追问</strong>
+        <span>{{ next_groups|length }} 轮</span>
+      </div>
+      <div>
+        <strong>报告生成</strong>
+        <span>{{ report_tools|length }} 次</span>
+      </div>
+    </div>
+    {% if session.last_agent_decision %}
+    <div class="callout-inline decision-note">
+      Agent 决策：{{ session.last_agent_decision.action }}；{{ session.last_agent_decision.reason }}
+    </div>
+    {% endif %}
+
+    <details class="debug-details">
+      <summary>查看工具调用明细</summary>
+      <div class="tool-log compact-tools">
+        {% for item in initial_tools %}
+        <div><strong>首问 · {{ item.tool }}</strong><span>{{ "成功" if item.ok else "失败" }}</span></div>
+        {% endfor %}
+        {% for group in next_groups %}
+        <div><strong>追问 · {{ group.after_question_id }}</strong><span>{{ group.tool_results|length }} 次</span></div>
+        {% endfor %}
+        {% for item in report_tools %}
+        <div><strong>报告 · {{ item.tool }}</strong><span>{{ "成功" if item.ok else "失败" }}</span></div>
+        {% endfor %}
+        {% if not initial_tools and not next_groups and not report_tools %}
+        <div><strong>未调用 API 工具</strong><span>本地规则</span></div>
+        {% endif %}
+      </div>
+    </details>
+  </article>
+
+  <article class="debug-card">
+    <div class="card-head">
+      <h2>日志与快照</h2>
+      <span>{{ events|length }} 条事件</span>
+    </div>
+    <div class="tool-matrix">
+      <div><strong>事件日志</strong><span>{{ events|length }}</span></div>
+      <div><strong>快照文件</strong><span>{{ snapshots|length }}</span></div>
+    </div>
+
+    <details class="debug-details">
+      <summary>查看日志事件</summary>
+      <div class="answer-list compact-events">
+        {% for event in events %}
+        <article class="log-event">
+          <span>{{ event.ts }} · {{ event.event }}</span>
+          <p>{{ event.summary }}</p>
+          <details>
+            <summary>payload</summary>
+            <pre class="mini-pre">{{ event.payload_json }}</pre>
+          </details>
+        </article>
+        {% else %}
+        <article><p>暂无日志事件。</p></article>
+        {% endfor %}
+      </div>
+    </details>
+
+    <details class="debug-details">
+      <summary>查看快照文件</summary>
+      <div class="hint-list compact-tags">
+        {% for item in snapshots %}
+        <span>{{ item }}</span>
+        {% else %}
+        <span>暂无快照</span>
+        {% endfor %}
+      </div>
+    </details>
+  </article>
+</section>
+
+<section class="section debug-card">
+  <div class="card-head">
+    <h2>答辩记录</h2>
+    <span>{{ session.answers|length }}/{{ session.questions|length }} 已回答</span>
+  </div>
+  <div class="answer-list compact-events">
     {% for question in session.questions %}
     <article>
       <span>{{ question.dimension }}</span>

@@ -18,7 +18,13 @@
       <nav class="nav">
         <a class="{{ 'active' if page == 'assignment' else '' }}" href="/assignment">题目要求</a>
         <a class="{{ 'active' if page == 'defense' else '' }}" href="/defense">提交与答辩</a>
-        <a class="{{ 'active' if page == 'report' else '' }}">评分报告</a>
+        {% if session and session.id %}
+        <a class="{{ 'active' if page == 'report' else '' }}" href="/report/{{ session.id }}">评分报告</a>
+        <a class="{{ 'active' if page == 'debug' else '' }}" href="/debug/{{ session.id }}">后台证据</a>
+        {% else %}
+        <a class="disabled {{ 'active' if page == 'report' else '' }}">评分报告</a>
+        <a class="disabled {{ 'active' if page == 'debug' else '' }}">后台证据</a>
+        {% endif %}
       </nav>
     </header>
     <main>
@@ -26,4 +32,3 @@
     </main>
   </body>
 </html>
-

@@ -77,7 +77,7 @@ def _event_summary(event: str, payload: Any) -> str:
         return (
             f"文件 {len(payload.get('extracted_files', []))} 个，"
             f"代码 {payload.get('line_count', 0)} 行，"
-            f"测试 {payload.get('test_count', 0)} 个，"
+            f"隐藏验收 {payload.get('hidden_tests', '-')}, "
             f"AI 交互 {payload.get('interaction_rounds', 0)} 轮。"
         )
     if event == "answer_submitted":

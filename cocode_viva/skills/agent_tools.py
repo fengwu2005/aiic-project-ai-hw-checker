@@ -8,7 +8,6 @@ MAX_TOOL_TEXT_CHARS = 6000
 MATERIAL_LABELS = {
     "readme": "README.md",
     "final_code": "final/taskflow.py",
-    "tests": "tests/test_taskflow.py",
     "initial_prompt": "ai/initial_prompt.md",
     "initial_response": "ai/initial_response.md",
     "initial_code": "ai/initial_code.py",
@@ -48,6 +47,7 @@ def execute_tool_request(request: dict[str, Any], material_texts: dict[str, str]
             result = {
                 "missing": analysis.get("missing", []),
                 "code": analysis.get("code", {}),
+                "execution": analysis.get("execution", {}),
                 "interaction": analysis.get("interaction", {}),
             }
         else:
@@ -81,7 +81,6 @@ def _describe_material(key: str) -> str:
     descriptions = {
         "readme": "学生项目说明、运行方法、功能清单和限制",
         "final_code": "学生最终提交代码",
-        "tests": "学生最终测试代码",
         "initial_prompt": "第一次请求 AI 生成代码的 prompt",
         "initial_response": "AI 第一次回复或结果摘要",
         "initial_code": "AI 第一次生成的原始代码",
@@ -160,4 +159,3 @@ def _limit(text: str) -> str:
     if len(text) <= MAX_TOOL_TEXT_CHARS:
         return text
     return text[:MAX_TOOL_TEXT_CHARS] + "\n...[truncated]"
-

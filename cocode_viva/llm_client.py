@@ -38,6 +38,7 @@ class LLMClient:
             "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
         ).rstrip("/")
         self.model = _setting("OPENAI_MODEL", "qwen3.5-122b-a10b")
+        self.timeout = _safe_float(_setting("OPENAI_TIMEOUT_SECONDS", "45"), 45)
 
     @property
     def chat_url(self) -> str:
@@ -67,7 +68,7 @@ class LLMClient:
             "Content-Type": "application/json",
         }
         try:
-            async with httpx.AsyncClient(timeout=45) as client:
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
                 response = await client.post(
                     self.chat_url,
                     headers=headers,
@@ -78,3 +79,11 @@ class LLMClient:
             return json.loads(content)
         except Exception:
             return None
+
+
+def _safe_float(value: str, default: float) -> float:
+    try:
+        number = float(value)
+    except ValueError:
+        return default
+    return max(3, min(number, 60))

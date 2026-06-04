@@ -10,6 +10,7 @@ from cocode_viva.debug_log import log_event, write_snapshot
 from cocode_viva.skills.archive_skill import safe_extract_zip
 from cocode_viva.skills.code_analysis_skill import analyze_code
 from cocode_viva.skills.file_reader_skill import read_expected_materials
+from cocode_viva.skills.hidden_test_skill import run_hidden_tests
 from cocode_viva.skills.interaction_skill import analyze_interaction
 from cocode_viva.skills.question_skill import generate_questions
 from cocode_viva.skills.scoring_skill import build_report
@@ -43,7 +44,8 @@ async def analyze_submission(zip_path: Path) -> dict:
         for key, value in materials.items()
     }
 
-    code = analyze_code(materials["final_code"]["text"], materials["tests"]["text"])
+    code = analyze_code(materials["final_code"]["text"])
+    execution = run_hidden_tests(extract_dir)
     interaction = analyze_interaction(
         materials["initial_prompt"]["text"],
         materials["initial_response"]["text"],
@@ -65,6 +67,7 @@ async def analyze_submission(zip_path: Path) -> dict:
         },
         "missing": read_result["missing"],
         "code": code,
+        "execution": execution,
         "interaction": interaction,
     }
 
@@ -87,13 +90,14 @@ async def analyze_submission(zip_path: Path) -> dict:
         "current_index": 0,
         "answers": {},
         "report": None,
+        "agent_enabled": agent.enabled,
     }
     save_session(session)
     log_event(session_id, "submission_analyzed", {
         "extracted_files": extracted,
         "missing": analysis["missing"],
         "line_count": code["line_count"],
-        "test_count": code["test_count"],
+        "hidden_tests": f"{execution.get('passed', 0)}/{execution.get('total', 0)}",
         "interaction_rounds": interaction["rounds"],
         "agent_enabled": agent.enabled,
     })
@@ -108,8 +112,29 @@ def _answer_is_weak(answer: str) -> bool:
     stripped = answer.strip()
     if len(stripped) < 40:
         return True
-    useful_terms = ["函数", "测试", "代码", "原因", "验证", "修改", "AI", "json", "id", "导入", "异常"]
+    useful_terms = ["函数", "验收", "代码", "原因", "验证", "修改", "AI", "json", "id", "导入", "异常"]
     return not any(term.lower() in stripped.lower() for term in useful_terms)
+
+
+def _answer_is_no_knowledge(answer: str) -> bool:
+    stripped = answer.strip().lower()
+    if not stripped:
+        return True
+    no_knowledge_terms = [
+        "我不会",
+        "不会",
+        "不知道",
+        "不清楚",
+        "不懂",
+        "没看懂",
+        "答不上来",
+        "不会回答",
+        "不太会",
+        "不太清楚",
+        "i don't know",
+        "idk",
+    ]
+    return any(term in stripped for term in no_knowledge_terms)
 
 
 def _build_followup_question(previous_question: dict, answer: str, question_id: str) -> dict:
@@ -118,11 +143,26 @@ def _build_followup_question(previous_question: dict, answer: str, question_id: 
         "dimension": "深度追问",
         "is_followup": True,
         "text": (
-            "上一问的回答没有提供足够证据。请直接结合具体文件、函数或测试回答："
+            "上一问的回答没有提供足够证据。请直接结合具体文件、函数或系统验收回答："
             f"{previous_question['text']} "
             "要求至少说明一个代码位置、一个验证方式，以及你本人做出的一个取舍。"
         ),
-        "focus": "追问回答是否能落到代码、测试和个人贡献证据。",
+        "focus": "追问回答是否能落到代码、系统验收和个人贡献证据。",
+        "evidence": previous_question.get("evidence", ""),
+    }
+
+
+def _build_no_knowledge_followup(previous_question: dict, question_id: str) -> dict:
+    return {
+        "id": question_id,
+        "dimension": "补救追问",
+        "is_followup": True,
+        "text": (
+            "你上一轮明确表示不会。请不要换题，尝试给出最小可验证回答："
+            f"围绕上一问“{previous_question['text']}”，至少指出一个相关函数名或文件名，"
+            "并说明你认为它和系统隐藏验收有什么关系。若仍然无法回答，请直接写“仍然不会”，系统将结束答辩并按答辩无效处理。"
+        ),
+        "focus": "确认学生是否完全无法解释提交内容；若仍无法回答，提前结束答辩。",
         "evidence": previous_question.get("evidence", ""),
     }
 
@@ -133,7 +173,7 @@ async def _build_next_question(session: dict, previous_question: dict, answer: s
     next_id = f"q{len(questions) + 1}"
     agent = DefenseAgent()
     if agent.enabled:
-        question, tool_results = await agent.generate_next_question(
+        decision, tool_results = await agent.decide_next_step(
             session["analysis"],
             session.get("material_texts", {}),
             questions,
@@ -141,14 +181,37 @@ async def _build_next_question(session: dict, previous_question: dict, answer: s
             previous_question,
             answer,
             next_id,
+            MAX_DEFENSE_ROUNDS,
         )
-        if question:
-            return question, tool_results
+        if decision:
+            session["last_agent_decision"] = {
+                "action": decision.get("action"),
+                "reason": decision.get("reason", ""),
+                "after_question_id": previous_question.get("id"),
+                "source": "api_agent",
+            }
+            if decision.get("action") == "end_defense":
+                session["early_finish_reason"] = decision.get("reason") or "AI 助教判断继续追问已无法有效验证学生理解，答辩提前结束。"
+                return None, tool_results
+            if decision.get("question"):
+                return decision["question"], tool_results
+        session["last_agent_decision"] = {
+            "action": "fallback",
+            "reason": "API Agent 未返回可用结构化决策，系统使用本地兜底问题。",
+            "after_question_id": previous_question.get("id"),
+            "source": "local_fallback",
+        }
 
-    asked_text = {question.get("text") for question in questions}
+    if _answer_is_no_knowledge(answer):
+        if previous_question.get("is_followup"):
+            session["early_finish_reason"] = "学生在补救追问中仍未提供有效说明，答辩提前结束。"
+            return None, []
+        return _build_no_knowledge_followup(previous_question, next_id), []
 
     if _answer_is_weak(answer) and not previous_question.get("is_followup"):
         return _build_followup_question(previous_question, answer, next_id), []
+
+    asked_text = {question.get("text") for question in questions}
 
     for candidate in session.get("question_pool", []):
         if candidate.get("text") not in asked_text:
@@ -176,10 +239,27 @@ async def submit_single_answer(session_id: str, answer: str) -> dict:
         "answer_chars": len(answer.strip()),
         "answer_preview": answer.strip()[:300],
         "current_index": current_index,
+        "no_knowledge": _answer_is_no_knowledge(answer),
     })
 
     if len(questions) < MAX_DEFENSE_ROUNDS:
         next_question, next_tool_results = await _build_next_question(session, question, answer)
+        if session.get("early_finish_reason"):
+            session["questions"] = questions
+            session["current_index"] = current_index + 1
+            save_session(session)
+            log_event(session_id, "defense_ended_early", {
+                "reason": session["early_finish_reason"],
+                "question_id": question["id"],
+                "agent_decision": session.get("last_agent_decision"),
+                "agent_tools": len(next_tool_results),
+            })
+            if next_tool_results:
+                session.setdefault("next_question_tool_results", []).append({
+                    "after_question_id": question["id"],
+                    "tool_results": next_tool_results,
+                })
+            return await finish_defense(session_id, session["answers"])
         if next_question:
             questions.append(next_question)
             log_event(session_id, "next_question_generated", {
@@ -188,6 +268,7 @@ async def submit_single_answer(session_id: str, answer: str) -> dict:
                 "dimension": next_question.get("dimension"),
                 "weak_answer": _answer_is_weak(answer),
                 "agent_tools": len(next_tool_results),
+                "agent_decision": session.get("last_agent_decision"),
             })
             if next_tool_results:
                 session.setdefault("next_question_tool_results", []).append({
@@ -208,6 +289,10 @@ async def finish_defense(session_id: str, answers: dict[str, str]) -> dict:
     session = load_session(session_id)
     session["answers"] = answers
     report = build_report(session["analysis"], session["questions"], answers)
+    if session.get("early_finish_reason"):
+        report["early_finish_reason"] = session["early_finish_reason"]
+        if session["early_finish_reason"] not in report.setdefault("risks", []):
+            report["risks"].insert(0, session["early_finish_reason"])
     log_event(session_id, "rule_report_generated", {
         "total": report["total"],
         "raw_total": report.get("raw_total"),

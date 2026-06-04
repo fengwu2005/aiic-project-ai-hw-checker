@@ -3,10 +3,10 @@
 <section class="hero">
   <div>
     <p class="eyebrow">固定作业题目</p>
-    <h1>TaskFlow Pro：使用 AI 协作实现可测试的智能任务管理器</h1>
+    <h1>TaskFlow Pro：使用 AI 协作实现可验收的智能任务管理器</h1>
     <p class="lead">
       本作业允许并鼓励学生使用 AI 辅助编程，但最终考核不只看代码是否能运行，
-      更关注学生是否能识别 AI 代码缺陷、通过测试验证修改，并解释自己的工程判断。
+      更关注学生是否能识别 AI 代码缺陷、通过系统验收理解修改，并解释自己的工程判断。
     </p>
   </div>
   <div class="hero-panel">
@@ -19,7 +19,7 @@
 <section class="section">
   <h2>一、作业背景</h2>
   <p>
-    AI 已经能快速生成可运行代码，但这些代码经常存在结构冗长、边界处理不足、测试薄弱、
+    AI 已经能快速生成可运行代码，但这些代码经常存在结构冗长、边界处理不足、接口不稳定、
     错误信息不清晰等问题。本作业要求学生和 AI 合作完成一个小型编程任务，并记录从
       AI 初版到最终版本的完整迭代过程。最终提交必须能回答：AI 做了什么、AI 错在哪里、
       学生如何验证、学生如何改造。
@@ -48,7 +48,6 @@
       <li>支持批量完成或批量归档任务。</li>
       <li>支持导入和导出 JSON 数据，并处理重复 id、字段缺失和格式错误。</li>
       <li>支持统计摘要，例如不同状态数量、逾期任务数量、高优先级未完成数量。</li>
-      <li>至少编写 12 个测试用例，覆盖正常流程、异常输入和必做功能组合。</li>
       <li>以上功能全部属于必做要求，不能作为 bonus 申报。</li>
     </ul>
   </div>
@@ -70,15 +69,37 @@
     <h2>五、实现约束</h2>
     <ul class="check-list">
       <li>只能使用 Python 标准库完成核心功能，便于本地复现。</li>
-      <li>业务逻辑应拆分为可测试函数，不能全部写在命令行解析里。</li>
+      <li>业务逻辑应拆分为可被系统调用的函数，不能全部写在命令行解析里。</li>
       <li>错误处理要明确，不能用宽泛异常吞掉数据问题。</li>
-      <li>README 必须给出运行示例、测试方式和已知限制。</li>
+      <li>最终代码必须暴露固定函数接口，供教师隐藏验收调用。</li>
+      <li>README 必须给出运行示例、功能说明和已知限制。</li>
     </ul>
   </div>
 </section>
 
+<section class="section">
+  <h2>六、固定函数接口</h2>
+  <p>为支持代码层面的严格验收，<code>final/taskflow.py</code> 必须保留以下函数名和核心参数。CLI 可以自由设计，但不能破坏这些接口。</p>
+  <div class="hint-list">
+    <span>add_task(title, description="", priority="medium", deadline=None, tags=None, path=DATA_FILE)</span>
+    <span>list_tasks(status=None, priority=None, tag=None, deadline_from=None, deadline_to=None, keyword=None, sort_by=None, include_archived=False, path=DATA_FILE)</span>
+    <span>update_status(task_id, status, path=DATA_FILE)</span>
+    <span>complete_task(task_id, path=DATA_FILE)</span>
+    <span>delete_task(task_id, path=DATA_FILE)</span>
+    <span>batch_update_status(task_ids, status, path=DATA_FILE)</span>
+    <span>archive_tasks(task_ids, path=DATA_FILE)</span>
+    <span>export_tasks(destination, path=DATA_FILE)</span>
+    <span>import_tasks(source, path=DATA_FILE)</span>
+    <span>task_statistics(today=None, path=DATA_FILE)</span>
+  </div>
+  <p>
+    所有读写数据的函数必须支持 <code>path</code> 参数，便于系统验收隔离。非法优先级、非法状态、非法日期、
+    字段缺失、JSON 格式错误和不存在的任务 id 必须抛出明确异常。答辩系统会在临时目录导入最终代码并运行教师隐藏验收。
+  </p>
+</section>
+
 <section class="section callout">
-  <h2>六、自主扩展 Bonus</h2>
+  <h2>七、自主扩展 Bonus</h2>
   <p>
     在完成全部必做功能之后，学生可以自由结合 AI 设计额外功能，例如提醒策略、自然语言输入、
     数据可视化、智能优先级建议、任务模板、周期性任务等。只有这些自定义扩展才可获得 bonus，
@@ -87,14 +108,12 @@
 </section>
 
 <section class="section">
-  <h2>七、固定提交格式</h2>
+  <h2>八、固定提交格式</h2>
   <p>请将以下结构压缩为 zip 文件上传。文件命名是答辩系统读取材料的重要依据。</p>
   <pre class="tree"><code>TaskFlow_Submission/
   README.md
   final/
     taskflow.py
-  tests/
-    test_taskflow.py
   ai/
     initial_prompt.md
     initial_response.md
@@ -105,11 +124,10 @@
 </section>
 
 <section class="section">
-  <h2>八、每个文件的含义</h2>
+  <h2>九、每个文件的含义</h2>
   <div class="rubric">
-    <div><strong>README.md</strong><span>项目说明</span><p>说明功能清单、运行方式、命令示例、测试方式、已知限制。</p></div>
+    <div><strong>README.md</strong><span>项目说明</span><p>说明功能清单、运行方式、命令示例和已知限制。</p></div>
     <div><strong>final/taskflow.py</strong><span>最终代码</span><p>学生最终提交的可运行版本，是答辩和评分的主要代码证据。</p></div>
-    <div><strong>tests/test_taskflow.py</strong><span>测试代码</span><p>至少 12 个测试，证明学生验证过 AI 生成代码和自己的修改。</p></div>
     <div><strong>ai/initial_prompt.md</strong><span>第一次 Prompt</span><p>第一次要求 AI 完成作业的原始提示词，用于判断需求表达质量。</p></div>
     <div><strong>ai/initial_response.md</strong><span>第一次结果</span><p>AI 第一次回复的完整内容或摘要，包含其设计思路和输出结果。</p></div>
     <div><strong>ai/initial_code.py</strong><span>AI 初版代码</span><p>AI 第一次生成的代码原样保存，用于和最终代码对比。</p></div>
@@ -119,23 +137,23 @@
 </section>
 
 <section class="section">
-  <h2>九、评分标准</h2>
+  <h2>十、评分标准</h2>
   <div class="rubric">
-    <div><strong>最终程序功能</strong><span>25 分</span><p>必做核心功能、组合筛选、搜索排序、统计、导入导出和批量操作。</p></div>
+    <div><strong>最终程序功能</strong><span>25 分</span><p>必做核心功能、固定接口、隐藏验收、组合筛选、搜索排序、统计、导入导出和批量操作。</p></div>
     <div><strong>代码质量</strong><span>15 分</span><p>结构清晰、职责划分合理、命名可读、避免过度冗长。</p></div>
-    <div><strong>测试与验证</strong><span>15 分</span><p>至少 12 个测试，覆盖边界情况、必做功能组合和 AI 易犯错误。</p></div>
+    <div><strong>系统验收与验证</strong><span>15 分</span><p>教师隐藏验收覆盖边界情况、必做功能组合和 AI 易犯错误。</p></div>
     <div><strong>AI 协作过程</strong><span>15 分</span><p>材料完整，能体现提示策略、验证、判断和多轮迭代。</p></div>
-    <div><strong>现场答辩</strong><span>20 分</span><p>能解释代码、测试、AI 问题和自己的修改依据。</p></div>
+    <div><strong>现场答辩</strong><span>20 分</span><p>能解释代码、系统验收、AI 问题和自己的修改依据。</p></div>
     <div><strong>报告与原创性</strong><span>10 分</span><p>能具体说明实现方法、AI 局限、个人贡献和改进空间。</p></div>
-    <div><strong>AI 共创扩展 Bonus</strong><span>最多 +5 分</span><p>学生可结合 AI 自主提出并实现有价值的新功能，需在 README、测试和报告中说明设计动机、实现方法和个人贡献。</p></div>
+    <div><strong>AI 共创扩展 Bonus</strong><span>最多 +5 分</span><p>学生可结合 AI 自主提出并实现有价值的新功能，需在 README 和报告中说明设计动机、实现方法和个人贡献。</p></div>
   </div>
 </section>
 
 <section class="section callout">
-  <h2>十、答辩系统如何判断原创性</h2>
+  <h2>十一、答辩系统如何判断原创性</h2>
   <p>
     系统不把“使用 AI”视为扣分项，而是检查学生是否能对 AI 输出进行审查、验证和改造。
-    如果最终代码较完整，但学生无法解释关键函数、测试意图或交互迭代原因，系统会降低个人贡献比例判断。
+    如果最终代码较完整，但学生无法解释关键函数、系统验收结果或交互迭代原因，系统会降低个人贡献比例判断。
   </p>
 </section>
 {% endblock %}

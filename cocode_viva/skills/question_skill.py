@@ -5,7 +5,7 @@ def generate_questions(analysis: dict) -> list[dict]:
     code = analysis["code"]
     interaction = analysis["interaction"]
     features = code["features"]
-    test_features = code["test_features"]
+    execution = analysis.get("execution", {})
 
     questions = [
         {
@@ -24,10 +24,10 @@ def generate_questions(analysis: dict) -> list[dict]:
         },
         {
             "id": "q3",
-            "dimension": "测试验证",
+            "dimension": "系统验收",
             "is_followup": False,
-            "text": "你的测试如何覆盖组合查询、排序、非法输入、导入导出或归档等必做工程功能？请举一个测试说明它防止了什么 AI 常见错误。",
-            "focus": "是否理解测试应验证必做功能组合，而不是只跑通基本增删改查。",
+            "text": "系统隐藏验收会检查组合查询、排序、非法输入、导入导出和归档等行为。请说明你的代码中哪些函数负责这些能力，以及你如何确认它们能被外部验收调用。",
+            "focus": "是否理解系统验收关注真实行为和固定函数接口，而不是只跑通 CLI。",
         },
         {
             "id": "q4",
@@ -80,20 +80,20 @@ def generate_questions(analysis: dict) -> list[dict]:
             "text": "你的 AI 交互记录少于要求的 5 轮有效迭代。请说明最终代码中哪些关键修改来自你的独立判断，而不是直接复制 AI 输出。",
             "focus": "交互证据不足时追问个人贡献。",
         })
-    elif not test_features["invalid_input"]:
+    elif execution and execution.get("passed", 0) < execution.get("total", 0):
         questions.append({
             "id": "q7",
-            "dimension": "测试验证",
+            "dimension": "系统验收",
             "is_followup": False,
-            "text": "你的测试中异常输入覆盖较弱。请现场设计一个非法输入测试，并说明预期结果。",
-            "focus": "补充测试设计能力。",
+            "text": "系统隐藏验收发现部分行为没有通过。请结合你的函数接口说明最可能失败的位置，以及你会如何定位和修复。",
+            "focus": "考察对验收失败的定位能力。",
         })
     else:
         questions.append({
             "id": "q7",
             "dimension": "原创性",
             "is_followup": False,
-            "text": "最终报告中你声称的关键贡献，哪一项最能体现你的工程能力？请结合具体函数、测试和 AI 对话记录说明。",
+            "text": "最终报告中你声称的关键贡献，哪一项最能体现你的工程能力？请结合具体函数、系统验收要求和 AI 对话记录说明。",
             "focus": "要求把贡献落到具体证据上。",
         })
 

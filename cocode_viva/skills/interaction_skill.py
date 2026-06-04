@@ -8,7 +8,7 @@ THINKING_TERMS = [
     "我认为",
     "我决定",
     "我验证",
-    "测试",
+    "验证",
     "边界",
     "取舍",
     "修改",
@@ -29,9 +29,9 @@ def analyze_interaction(initial_prompt: str, initial_response: str, conversation
     prompt_specificity = 0
     if len(initial_prompt) >= 80:
         prompt_specificity += 1
-    if any(term in initial_prompt.lower() for term in ["json", "test", "pytest", "argparse", "deadline", "priority"]):
+    if any(term in initial_prompt.lower() for term in ["json", "argparse", "deadline", "priority", "接口", "验收"]):
         prompt_specificity += 1
-    if any(term in initial_prompt for term in ["不要", "必须", "边界", "异常", "测试"]):
+    if any(term in initial_prompt for term in ["不要", "必须", "边界", "异常", "验收", "验证"]):
         prompt_specificity += 1
 
     return {
