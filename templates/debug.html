@@ -179,6 +179,7 @@
     {% for question in session.questions %}
     <article>
       <span>{{ question.dimension }}</span>
+      <small>来源：{{ question.source or "unknown" }}</small>
       <h3>{{ question.text }}</h3>
       <p>{{ session.answers.get(question.id, "未回答") }}</p>
     </article>

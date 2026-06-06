@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-head">
+  <p class="eyebrow">系统入口</p>
+  <h1>AI 协作编程答辩系统</h1>
+  <p>学生进入班级提交作业并完成短答辩；教师查看班级报告并审核最终分数。</p>
+</section>
+
+{% if error %}
+<div class="alert">{{ error }}</div>
+{% endif %}
+
+<section class="section grid two">
+  <form class="auth-panel" method="post" action="/login">
+    <h2>登录</h2>
+    <label>账号<input name="username" required autocomplete="username"></label>
+    <label>密码<input name="password" type="password" required autocomplete="current-password"></label>
+    <button class="primary-button wide" type="submit">进入系统</button>
+  </form>
+
+  <form class="auth-panel" method="post" action="/register">
+    <h2>注册</h2>
+    <label>身份
+      <select name="role" required>
+        <option value="student">学生</option>
+        <option value="teacher">教师</option>
+      </select>
+    </label>
+    <label>姓名<input name="display_name" required></label>
+    <label>账号<input name="username" required autocomplete="username"></label>
+    <label>密码<input name="password" type="password" required autocomplete="new-password"></label>
+    <label>班级邀请码 <small class="muted">学生必填，演示默认 AI2026</small><input name="class_code" placeholder="AI2026"></label>
+    <button class="secondary-button wide" type="submit">注册并进入</button>
+  </form>
+</section>
+{% endblock %}

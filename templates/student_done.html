@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-head compact-head">
+  <p class="eyebrow">提交完成</p>
+  <h1>作业已进入教师审核</h1>
+  <p>你已完成上传与现场答辩。评分报告和后台证据只对教师开放，教师审核后会形成最终分数。</p>
+</section>
+
+<section class="section grid two">
+  <div>
+    <h2>提交状态</h2>
+    <div class="score-list">
+      <div><span>作业</span><strong>{{ session.portal.assignment_title if session.portal else "TaskFlow Pro" }}</strong></div>
+      <div><span>班级</span><strong>{{ session.portal.class_name if session.portal else "-" }}</strong></div>
+      <div><span>状态</span><strong>{{ session.portal.status if session.portal else "pending_review" }}</strong></div>
+      <div><span>答辩轮次</span><strong>{{ session.answers|length }}</strong></div>
+    </div>
+  </div>
+  <div>
+    <h2>下一步</h2>
+    <p class="muted">请等待教师审核。若教师需要补充说明，会通过课程渠道联系你。</p>
+    <a class="primary-button" href="/student">返回学生端</a>
+  </div>
+</section>
+{% endblock %}

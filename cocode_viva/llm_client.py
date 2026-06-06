@@ -50,7 +50,13 @@ class LLMClient:
     def enabled(self) -> bool:
         return bool(self.api_key)
 
-    async def chat_json(self, system: str, user: str) -> dict[str, Any] | None:
+    async def chat_json(
+        self,
+        system: str,
+        user: str,
+        temperature: float = 0.2,
+        max_tokens: int | None = None,
+    ) -> dict[str, Any] | None:
         if not self.enabled:
             return None
 
@@ -60,9 +66,11 @@ class LLMClient:
                 {"role": "system", "content": system},
                 {"role": "user", "content": user},
             ],
-            "temperature": 0.2,
+            "temperature": temperature,
             "response_format": {"type": "json_object"},
         }
+        if max_tokens is not None:
+            payload["max_tokens"] = max(64, min(int(max_tokens), 4096))
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",

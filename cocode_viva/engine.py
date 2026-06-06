@@ -16,7 +16,7 @@ from cocode_viva.skills.question_skill import generate_questions
 from cocode_viva.skills.scoring_skill import build_report
 
 
-MAX_DEFENSE_ROUNDS = 7
+MAX_DEFENSE_ROUNDS = 4
 
 
 def _session_path(session_id: str) -> Path:
@@ -78,6 +78,7 @@ async def analyze_submission(zip_path: Path) -> dict:
     if agent.enabled:
         llm_question, agent_tool_results = await agent.generate_initial_question(analysis, material_texts)
         if llm_question:
+            llm_question["source"] = "api_agent"
             questions = [llm_question]
 
     session = {
@@ -100,9 +101,14 @@ async def analyze_submission(zip_path: Path) -> dict:
         "hidden_tests": f"{execution.get('passed', 0)}/{execution.get('total', 0)}",
         "interaction_rounds": interaction["rounds"],
         "agent_enabled": agent.enabled,
+        "initial_question_source": questions[0].get("source") if questions else "",
     })
     write_snapshot(session_id, "analysis", analysis)
-    write_snapshot(session_id, "questions", {"questions": questions, "question_pool": question_pool})
+    write_snapshot(session_id, "active_questions", {"questions": questions})
+    write_snapshot(session_id, "local_fallback_question_pool", {
+        "note": "仅用于 API 不可用或结构化返回失败时兜底，不会一次性展示给学生。",
+        "count": len(question_pool),
+    })
     if agent_tool_results:
         write_snapshot(session_id, "question_agent_tool_results", {"tool_results": agent_tool_results})
     return session
@@ -142,10 +148,9 @@ def _build_followup_question(previous_question: dict, answer: str, question_id: 
         "id": question_id,
         "dimension": "深度追问",
         "is_followup": True,
+        "source": "local_fallback",
         "text": (
-            "上一问的回答没有提供足够证据。请直接结合具体文件、函数或系统验收回答："
-            f"{previous_question['text']} "
-            "要求至少说明一个代码位置、一个验证方式，以及你本人做出的一个取舍。"
+            "请补充一个具体证据：指出相关函数名或文件名，并说明你如何验证它。"
         ),
         "focus": "追问回答是否能落到代码、系统验收和个人贡献证据。",
         "evidence": previous_question.get("evidence", ""),
@@ -155,14 +160,13 @@ def _build_followup_question(previous_question: dict, answer: str, question_id: 
 def _build_no_knowledge_followup(previous_question: dict, question_id: str) -> dict:
     return {
         "id": question_id,
-        "dimension": "补救追问",
+        "dimension": "换向追问",
         "is_followup": True,
+        "source": "local_fallback",
         "text": (
-            "你上一轮明确表示不会。请不要换题，尝试给出最小可验证回答："
-            f"围绕上一问“{previous_question['text']}”，至少指出一个相关函数名或文件名，"
-            "并说明你认为它和系统隐藏验收有什么关系。若仍然无法回答，请直接写“仍然不会”，系统将结束答辩并按答辩无效处理。"
+            "换个基础问题：任选一个你熟悉的函数，说明它做什么，以及你改过哪里。"
         ),
-        "focus": "确认学生是否完全无法解释提交内容；若仍无法回答，提前结束答辩。",
+        "focus": "给学生换维度说明的机会，考察是否能提供任何可验证的个人理解证据。",
         "evidence": previous_question.get("evidence", ""),
     }
 
@@ -194,6 +198,7 @@ async def _build_next_question(session: dict, previous_question: dict, answer: s
                 session["early_finish_reason"] = decision.get("reason") or "AI 助教判断继续追问已无法有效验证学生理解，答辩提前结束。"
                 return None, tool_results
             if decision.get("question"):
+                decision["question"]["source"] = "api_agent"
                 return decision["question"], tool_results
         session["last_agent_decision"] = {
             "action": "fallback",
@@ -203,13 +208,15 @@ async def _build_next_question(session: dict, previous_question: dict, answer: s
         }
 
     if _answer_is_no_knowledge(answer):
-        if previous_question.get("is_followup"):
-            session["early_finish_reason"] = "学生在补救追问中仍未提供有效说明，答辩提前结束。"
+        if previous_question.get("is_followup") and len(questions) >= 3:
+            session["early_finish_reason"] = "学生多轮仍未提供可验证说明，答辩提前结束。"
             return None, []
-        return _build_no_knowledge_followup(previous_question, next_id), []
+        next_question = _build_no_knowledge_followup(previous_question, next_id)
+        return next_question, []
 
     if _answer_is_weak(answer) and not previous_question.get("is_followup"):
-        return _build_followup_question(previous_question, answer, next_id), []
+        next_question = _build_followup_question(previous_question, answer, next_id)
+        return next_question, []
 
     asked_text = {question.get("text") for question in questions}
 
@@ -217,6 +224,7 @@ async def _build_next_question(session: dict, previous_question: dict, answer: s
         if candidate.get("text") not in asked_text:
             candidate = dict(candidate)
             candidate["id"] = next_id
+            candidate["source"] = "local_fallback"
             return candidate, []
     return None, []
 
@@ -266,6 +274,7 @@ async def submit_single_answer(session_id: str, answer: str) -> dict:
                 "after_question_id": question["id"],
                 "next_question_id": next_question["id"],
                 "dimension": next_question.get("dimension"),
+                "source": next_question.get("source"),
                 "weak_answer": _answer_is_weak(answer),
                 "agent_tools": len(next_tool_results),
                 "agent_decision": session.get("last_agent_decision"),

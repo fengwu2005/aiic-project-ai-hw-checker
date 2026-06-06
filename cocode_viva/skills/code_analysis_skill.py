@@ -29,20 +29,17 @@ def analyze_code(source: str) -> dict:
 
     lowered = source.lower()
     result["features"] = {
-        "json_persistence": "json" in lowered and ("open(" in lowered or "pathlib" in lowered),
+        "image_io": "image.open" in lowered or "pil" in lowered or "save(" in lowered,
         "cli_interface": "argparse" in lowered or "click" in lowered or "sys.argv" in lowered,
-        "priority": "priority" in lowered or "优先级" in lowered,
-        "deadline": "deadline" in lowered or "due" in lowered or "截止" in lowered,
-        "tags": "tags" in lowered or "tag" in lowered or "标签" in lowered,
-        "keyword_search": "keyword" in lowered or "search" in lowered or "query" in lowered or "关键词" in lowered,
-        "sort": "sort" in lowered or "sorted(" in lowered or "排序" in lowered,
-        "statistics": "stats" in lowered or "statistics" in lowered or "count" in lowered or "统计" in lowered,
-        "archive": "archived" in lowered or "archive" in lowered or "归档" in lowered,
-        "batch_operation": "batch" in lowered or "bulk" in lowered or "ids" in lowered or "批量" in lowered,
-        "import_export": "export_tasks" in lowered or "import_tasks" in lowered or "导入" in lowered or "导出" in lowered,
-        "status_filter": "status" in lowered or "completed" in lowered or "done" in lowered,
-        "id_generation": "uuid" in lowered or "next_id" in lowered or "max(" in lowered,
-        "date_validation": "datetime" in lowered or "fromisoformat" in lowered or "strptime" in lowered,
+        "resize": "resize" in lowered or "scale" in lowered or "thumbnail" in lowered or "放大" in lowered or "缩小" in lowered,
+        "rotate": "rotate" in lowered or "旋转" in lowered,
+        "crop": "crop" in lowered or "剪切" in lowered or "裁剪" in lowered,
+        "invert": "invert" in lowered or "255 -" in lowered or "反色" in lowered,
+        "blur": "blur" in lowered or "mean" in lowered or "average" in lowered or "模糊" in lowered,
+        "edge_detection": "edge" in lowered or "kernel" in lowered or "convolution" in lowered or "卷积" in lowered or "边缘" in lowered,
+        "median_filter": "median" in lowered or "中值" in lowered,
+        "pixel_access": "getpixel" in lowered or "putpixel" in lowered or "load()" in lowered,
+        "parameter_validation": "valueerror" in lowered or "raise" in lowered or "validate" in lowered,
         "error_handling": "try:" in lowered and "except" in lowered,
     }
 

@@ -8,11 +8,11 @@ import textwrap
 from pathlib import Path
 
 
-TIMEOUT_SECONDS = 6
+TIMEOUT_SECONDS = 8
 
 
 def run_hidden_tests(extract_dir: Path) -> dict:
-    """Run deterministic instructor checks against final/taskflow.py in a subprocess."""
+    """Run deterministic instructor checks against final/image_ops.py in a subprocess."""
     source_path = _find_final_code(extract_dir)
     if not source_path.exists():
         return {
@@ -21,11 +21,11 @@ def run_hidden_tests(extract_dir: Path) -> dict:
             "total": 1,
             "pass_rate": 0,
             "status": "failed",
-            "cases": [{"name": "final/taskflow.py exists", "ok": False, "detail": "file not found"}],
-            "error": "final/taskflow.py not found",
+            "cases": [{"name": "final/image_ops.py exists", "ok": False, "detail": "file not found"}],
+            "error": "final/image_ops.py not found",
         }
 
-    with tempfile.TemporaryDirectory(prefix="taskflow_hidden_") as temp_dir:
+    with tempfile.TemporaryDirectory(prefix="imagelab_hidden_") as temp_dir:
         runner = Path(temp_dir) / "hidden_runner.py"
         runner.write_text(_runner_script(source_path), encoding="utf-8")
         try:
@@ -88,6 +88,8 @@ def _runner_script(source_path: Path) -> str:
         import json
         from pathlib import Path
 
+        from PIL import Image
+
         RESULT = {{"cases": []}}
 
         def record(name, ok, detail=""):
@@ -97,139 +99,150 @@ def _runner_script(source_path: Path) -> str:
             if not condition:
                 raise AssertionError(message)
 
-        def expect_raises(func, *args, **kwargs):
-            try:
-                func(*args, **kwargs)
-            except Exception:
-                return True
-            raise AssertionError("expected an exception")
+        def rgb(pixel):
+            if isinstance(pixel, int):
+                return (pixel, pixel, pixel)
+            return tuple(pixel[:3])
+
+        def close_tuple(actual, expected, tolerance=3):
+            actual = rgb(actual)
+            expected = rgb(expected)
+            return all(abs(a - e) <= tolerance for a, e in zip(actual, expected))
 
         try:
-            spec = importlib.util.spec_from_file_location("student_taskflow", {source})
+            spec = importlib.util.spec_from_file_location("student_image_ops", {source})
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
-            record("import final/taskflow.py", True)
+            record("import final/image_ops.py", True)
         except Exception as exc:
-            record("import final/taskflow.py", False, repr(exc))
+            record("import final/image_ops.py", False, repr(exc))
             module = None
 
         required_functions = [
-            "add_task", "list_tasks", "update_status", "complete_task", "delete_task",
-            "batch_update_status", "archive_tasks", "export_tasks", "import_tasks", "task_statistics",
+            "load_image", "save_image", "resize_image", "rotate_image", "crop_image",
+            "invert_image", "blur_image", "edge_detect", "median_filter", "transform_image",
         ]
 
         if module is not None:
             try:
                 missing = [name for name in required_functions if not callable(getattr(module, name, None))]
                 require(not missing, "missing functions: " + ", ".join(missing))
-                record("required function API", True)
+                record("required image function API", True)
             except Exception as exc:
-                record("required function API", False, repr(exc))
+                record("required image function API", False, repr(exc))
 
-            data_path = Path("tasks.json")
-            export_path = Path("export.json")
-            import_path = Path("import.json")
-
-            try:
-                first = module.add_task(
-                    "Finish AI report",
-                    description="write the reflection",
-                    priority="high",
-                    deadline="2026-06-10",
-                    tags=["course", "ai"],
-                    path=data_path,
-                )
-                second = module.add_task(
-                    "Read paper",
-                    description="rag retrieval notes",
-                    priority="low",
-                    deadline="2026-06-12",
-                    tags="reading,ai",
-                    path=data_path,
-                )
-                require(first["id"] != second["id"], "ids must be unique")
-                require(first["status"] == "todo", "new task should be todo")
-                require("created_at" in first and "updated_at" in first, "timestamps required")
-                record("add_task and persistence", True)
-            except Exception as exc:
-                record("add_task and persistence", False, repr(exc))
+            base = Image.new("RGB", (4, 4))
+            values = [
+                [(0, 0, 0), (40, 0, 0), (80, 0, 0), (120, 0, 0)],
+                [(0, 40, 0), (40, 40, 40), (80, 40, 40), (120, 40, 40)],
+                [(0, 80, 0), (40, 80, 40), (80, 80, 80), (120, 80, 80)],
+                [(0, 120, 0), (40, 120, 40), (80, 120, 80), (120, 120, 120)],
+            ]
+            for y, row in enumerate(values):
+                for x, value in enumerate(row):
+                    base.putpixel((x, y), value)
 
             try:
-                expect_raises(module.add_task, "Bad priority", priority="urgent", deadline="2026-06-11", path=data_path)
-                expect_raises(module.add_task, "Bad date", priority="high", deadline="2026-02-31", path=data_path)
-                record("input validation", True)
+                input_path = Path("input.png")
+                output_path = Path("output.png")
+                base.save(input_path)
+                loaded = module.load_image(input_path)
+                require(getattr(loaded, "size", None) == (4, 4), "load_image should return image with original size")
+                saved_path = module.save_image(loaded, output_path)
+                require(output_path.exists(), "save_image should write output file")
+                record("load_image and save_image", True)
             except Exception as exc:
-                record("input validation", False, repr(exc))
+                record("load_image and save_image", False, repr(exc))
 
             try:
-                updated = module.update_status(1, "doing", path=data_path)
-                require(updated["status"] == "doing", "status should become doing")
-                done = module.complete_task(1, path=data_path)
-                require(done["status"] == "done", "complete_task should mark done")
-                expect_raises(module.update_status, 999, "done", path=data_path)
-                record("status update and missing id errors", True)
+                up = module.resize_image(base, scale=2)
+                down = module.resize_image(base, scale=0.5)
+                require(up.size == (8, 8), "scale=2 should produce 8x8 image")
+                require(down.size == (2, 2), "scale=0.5 should produce 2x2 image")
+                record("resize enlarge and shrink", True)
             except Exception as exc:
-                record("status update and missing id errors", False, repr(exc))
+                record("resize enlarge and shrink", False, repr(exc))
 
             try:
-                filtered = module.list_tasks(priority="low", tag="reading", keyword="paper", sort_by="deadline", path=data_path)
-                require(len(filtered) == 1 and filtered[0]["title"] == "Read paper", "filter/search should find Read paper")
-                deadline_filtered = module.list_tasks(deadline_from="2026-06-11", deadline_to="2026-06-13", path=data_path)
-                require(len(deadline_filtered) == 1, "deadline range should filter correctly")
-                record("filter search and sort", True)
+                rotated = module.rotate_image(base, 90)
+                require(rotated.size in {{(4, 4), (4, 4)}}, "90 degree rotation should preserve square size")
+                require(close_tuple(rotated.getpixel((0, 0)), base.getpixel((3, 0))) or close_tuple(rotated.getpixel((0, 0)), base.getpixel((0, 3))), "rotation should move pixels")
+                record("rotate_image", True)
             except Exception as exc:
-                record("filter search and sort", False, repr(exc))
+                record("rotate_image", False, repr(exc))
 
             try:
-                module.batch_update_status([1, 2], "done", path=data_path)
-                listed = module.list_tasks(status="done", path=data_path)
-                require(len(listed) == 2, "batch_update_status should update both tasks")
-                module.archive_tasks([2], path=data_path)
-                visible = module.list_tasks(path=data_path)
-                require(all(task["status"] != "archived" for task in visible), "archived tasks hidden by default")
-                archived = module.list_tasks(status="archived", include_archived=True, path=data_path)
-                require(len(archived) == 1, "archived task should be visible with include_archived")
-                record("batch and archive operations", True)
+                cropped = module.crop_image(base, 1, 1, 3, 3)
+                require(cropped.size == (2, 2), "crop should return selected region size")
+                require(close_tuple(cropped.getpixel((0, 0)), base.getpixel((1, 1))), "crop top-left pixel mismatch")
+                record("crop_image", True)
             except Exception as exc:
-                record("batch and archive operations", False, repr(exc))
+                record("crop_image", False, repr(exc))
 
             try:
-                count = module.export_tasks(export_path, path=data_path)
-                require(count >= 2 and export_path.exists(), "export should write JSON file")
-                import_path.write_text(json.dumps([{{
-                    "id": 1,
-                    "title": "Imported task",
-                    "description": "duplicate id should be handled",
-                    "priority": "medium",
-                    "deadline": "2026-06-20",
-                    "status": "todo",
-                    "tags": ["imported"],
-                    "created_at": "2026-06-01T00:00:00+00:00",
-                    "updated_at": "2026-06-01T00:00:00+00:00",
-                }}]), encoding="utf-8")
-                imported = module.import_tasks(import_path, path=data_path)
-                require(imported == 1, "import_tasks should report one imported task")
-                tasks = module.list_tasks(include_archived=True, path=data_path)
-                require(len({{int(task["id"]) for task in tasks}}) == len(tasks), "duplicate ids must be resolved")
-                record("import export and duplicate id handling", True)
+                inverted = module.invert_image(base)
+                require(close_tuple(inverted.getpixel((0, 0)), (255, 255, 255)), "black should invert to white")
+                require(close_tuple(inverted.getpixel((1, 1)), (215, 215, 215)), "gray pixel inversion mismatch")
+                record("invert_image", True)
             except Exception as exc:
-                record("import export and duplicate id handling", False, repr(exc))
+                record("invert_image", False, repr(exc))
 
             try:
-                stats = module.task_statistics(today="2026-06-15", path=data_path)
-                require(stats["total"] >= 3, "stats total should include imported task")
-                require("by_status" in stats and "by_tag" in stats, "stats should include status and tag summaries")
-                require(stats.get("high_priority_open", 0) >= 0 and stats.get("overdue", 0) >= 0, "stats counters required")
-                record("task_statistics", True)
+                impulse = Image.new("RGB", (5, 5), (0, 0, 0))
+                impulse.putpixel((2, 2), (255, 255, 255))
+                blurred = module.blur_image(impulse)
+                center = rgb(blurred.getpixel((2, 2)))[0]
+                require(20 <= center <= 40, f"3x3 average blur center should be about 28, got {{center}}")
+                record("blur_image average kernel", True)
             except Exception as exc:
-                record("task_statistics", False, repr(exc))
+                record("blur_image average kernel", False, repr(exc))
 
             try:
-                module.delete_task(1, path=data_path)
-                expect_raises(module.delete_task, 404, path=data_path)
-                record("delete_task and missing id errors", True)
+                edge_source = Image.new("RGB", (5, 5), (0, 0, 0))
+                for y in range(5):
+                    for x in range(3, 5):
+                        edge_source.putpixel((x, y), (255, 255, 255))
+                edged = module.edge_detect(edge_source)
+                edge_value = max(rgb(edged.getpixel((2, 2))))
+                flat_value = max(rgb(edged.getpixel((0, 2))))
+                require(edge_value > flat_value, "edge pixel should be stronger than flat area")
+                record("edge_detect fixed convolution", True)
             except Exception as exc:
-                record("delete_task and missing id errors", False, repr(exc))
+                record("edge_detect fixed convolution", False, repr(exc))
+
+            try:
+                noisy = Image.new("RGB", (5, 5), (30, 30, 30))
+                noisy.putpixel((2, 2), (255, 255, 255))
+                filtered = module.median_filter(noisy, size=3)
+                require(close_tuple(filtered.getpixel((2, 2)), (30, 30, 30)), "median filter should remove isolated bright noise")
+                record("median_filter", True)
+            except Exception as exc:
+                record("median_filter", False, repr(exc))
+
+            try:
+                transformed_path = Path("transformed.png")
+                result = module.transform_image(input_path, transformed_path, "invert")
+                require(transformed_path.exists(), "transform_image should write output")
+                transformed = Image.open(transformed_path).convert("RGB")
+                require(close_tuple(transformed.getpixel((0, 0)), (255, 255, 255)), "transform_image invert failed")
+                record("transform_image dispatcher", True)
+            except Exception as exc:
+                record("transform_image dispatcher", False, repr(exc))
+
+            try:
+                try:
+                    module.resize_image(base, scale=0)
+                    raise AssertionError("scale=0 should fail")
+                except Exception:
+                    pass
+                try:
+                    module.crop_image(base, 3, 3, 1, 1)
+                    raise AssertionError("invalid crop box should fail")
+                except Exception:
+                    pass
+                record("parameter validation", True)
+            except Exception as exc:
+                record("parameter validation", False, repr(exc))
 
         passed = sum(1 for case in RESULT["cases"] if case["ok"])
         total = len(RESULT["cases"]) or 1
@@ -244,10 +257,10 @@ def _runner_script(source_path: Path) -> str:
 
 
 def _find_final_code(extract_dir: Path) -> Path:
-    direct = (extract_dir / "final" / "taskflow.py").resolve()
+    direct = (extract_dir / "final" / "image_ops.py").resolve()
     if direct.exists():
         return direct
-    matches = sorted(extract_dir.glob("*/final/taskflow.py"))
+    matches = sorted(extract_dir.glob("*/final/image_ops.py"))
     if matches:
         return matches[0].resolve()
     return direct

@@ -8,11 +8,11 @@ from cocode_viva.skills.agent_tools import execute_tool_requests, material_index
 
 
 ASSIGNMENT_BRIEF = """
-固定作业：TaskFlow Pro。
-必做功能：任务数据模型、固定函数接口、增删改查、状态更新、JSON 持久化、组合筛选、关键词搜索、排序、批量归档/完成、导入导出、统计摘要。
+固定作业：ImageLab 图像变换工具。
+必做功能：读取图片、保存图片、放大、缩小、旋转、剪切/裁剪、反色、模糊、固定卷积核边缘提取、中值滤波。
 AI 协作材料：第一次 prompt、第一次 AI 回复、AI 初版代码、完整后续对话、最终代码、README、学生报告。
 评分关注：教师隐藏验收、最终代码质量、系统验证证据、AI 协作过程、答辩理解、原创性和个人贡献比例。
-Bonus：只有学生自定义扩展功能才可能获得最多 5 分，不得弥补必做功能缺失。
+Bonus：只有学生额外实现的图像功能才可能获得最多 5 分，不得弥补必做功能缺失。
 """.strip()
 
 
@@ -38,12 +38,18 @@ class DefenseAgent:
         system = _system_prompt()
         user = json.dumps({
             "assignment": ASSIGNMENT_BRIEF,
-            "task": "请基于静态分析和工具证据只生成第 1 个现场答辩问题。这个问题应优先验证学生是否理解最终代码与 AI 初版代码的关键差异。只输出 JSON：{\"question\":{\"dimension\":\"...\",\"text\":\"...\",\"focus\":\"...\",\"evidence\":\"引用你使用的材料或工具证据\"}}",
+            "task": (
+                "请基于静态分析和工具证据只生成第 1 个现场答辩问题。"
+                f"{_single_question_rule()}"
+                f"{_short_question_rule()}"
+                "这个问题应优先验证学生是否理解最终代码与 AI 初版代码的关键差异。"
+                f"只输出 JSON：{_question_output_schema()}"
+            ),
             "analysis": _compact_analysis(analysis),
             "tool_results": tool_results,
         }, ensure_ascii=False)
         result = await self.client.chat_json(system, user)
-        question = _normalize_single_question((result or {}).get("question"), "q1")
+        question = _normalize_single_question(_first_question_payload(result), "q1")
         return question, tool_results
 
     async def generate_next_question(
@@ -68,7 +74,14 @@ class DefenseAgent:
         system = _system_prompt()
         user = json.dumps({
             "assignment": ASSIGNMENT_BRIEF,
-            "task": "请根据上一问、学生上一轮回答、已问历史和工具证据生成下一道现场追问。不要重复已问问题；如果上一轮回答空泛，必须针对其缺口追问；如果上一轮回答扎实，则换到仍未验证的关键维度。只输出 JSON：{\"question\":{\"dimension\":\"...\",\"text\":\"...\",\"focus\":\"...\",\"evidence\":\"引用证据\"}}",
+            "task": (
+                "请根据上一问、学生上一轮回答、已问历史和工具证据生成下一道现场追问。"
+                f"{_single_question_rule()}"
+                f"{_short_question_rule()}"
+                "不要重复已问问题；如果上一轮回答空泛，必须针对其缺口追问；"
+                "如果上一轮回答扎实，则换到仍未验证的关键维度。"
+                f"只输出 JSON：{_question_output_schema()}"
+            ),
             "analysis": _compact_analysis(analysis),
             "tool_results": tool_results,
             "asked_questions": questions,
@@ -77,7 +90,7 @@ class DefenseAgent:
             "previous_answer": previous_answer,
         }, ensure_ascii=False)
         result = await self.client.chat_json(system, user)
-        question = _normalize_single_question((result or {}).get("question"), next_id)
+        question = _normalize_single_question(_first_question_payload(result), next_id)
         return question, tool_results
 
     async def decide_next_step(
@@ -107,23 +120,27 @@ class DefenseAgent:
                 "请扮演真实课程答辩助教，根据已问问题、全部回答、上一问回答、材料证据和隐藏验收结果，决定下一步。"
                 "你必须输出合法 JSON。"
                 "action 只能是 ask 或 end_defense。"
-                "当学生回答明显无法作答、承认不会、连续空泛、重复逃避，或答辩已经无法验证其本人理解时，应输出 end_defense。"
-                "当仍有补救价值时，输出 ask，并生成一题针对上一轮缺口的追问；不要若无其事切换到新主题。"
+                "答辩目标是公平考核学生真实理解，不是惩罚学生某一道题不会。"
+                "如果学生单轮表示不会、不知道或答不上来，通常应继续 ask：可以降低难度、换一个维度、让学生解释文件/函数/AI协作中的更基础证据。"
+                "只有在已覆盖多个关键维度后，学生仍连续无法提供任何可验证细节，或已达到最大轮次，才应输出 end_defense。"
+                "当仍有补救价值时，输出 ask，并生成一题更公平的追问；可以针对上一轮缺口，也可以切换到尚未验证但更基础的维度。"
                 "当上一轮回答扎实时，才可以换到尚未验证的关键维度。"
                 "不要重复已问问题。"
-                "输出格式：{\"action\":\"ask|end_defense\",\"reason\":\"...\",\"question\":{\"dimension\":\"...\",\"text\":\"...\",\"focus\":\"...\",\"evidence\":\"...\"}}。"
+                f"{_single_question_rule()}"
+                f"{_short_question_rule()}"
+                f"输出格式：{_next_step_output_schema()}。"
                 "如果 action=end_defense，question 可为 null。"
             ),
             "rules": {
                 "max_rounds": max_rounds,
                 "current_rounds": len(questions),
                 "end_defense_when": [
-                    "学生明确表示不会、不知道、不清楚，且没有提供任何可验证细节",
-                    "上一轮已经是补救追问但仍无法给出代码、函数、验收或协作证据",
-                    "多轮回答重复、极短或逃避，继续提问无法产生有效评分证据",
                     "已达到最大轮次",
+                    "已经至少完成 3 轮答辩，且学生多轮连续无法提供任何文件、函数、验收、报告或 AI 协作细节",
+                    "学生明确拒绝继续答辩，或连续重复逃避且换维度后仍没有任何可评分证据",
                 ],
                 "ask_when": [
+                    "学生只是一道题不会或某个维度答不上来，应换成更基础或不同维度的问题继续考核",
                     "上一轮有部分信息但证据不足，需要追问同一缺口",
                     "学生回答扎实，可以切换到未验证维度",
                 ],
@@ -204,6 +221,30 @@ def _system_prompt() -> str:
     )
 
 
+def _single_question_rule() -> str:
+    return (
+        "本次调用只能生成 1 个问题。"
+        "禁止输出 questions 数组、候选题列表、题库、多个编号问题或任何备用问题。"
+        "如果需要继续追问，也只能给当前这一轮的 1 个问题。"
+    )
+
+
+def _short_question_rule() -> str:
+    return (
+        "问题必须短小具体，尽量不超过 60 个中文字符。"
+        "只问一个点，不要把多个问题用逗号、顿号或分号串起来。"
+        "避免泛泛而谈，优先问函数、文件、字段、一次 AI 修改或一个验收行为。"
+    )
+
+
+def _question_output_schema() -> str:
+    return "{\"question\":{\"dimension\":\"...\",\"text\":\"...\",\"focus\":\"...\",\"evidence\":\"引用证据\"}}。禁止输出 questions 字段。"
+
+
+def _next_step_output_schema() -> str:
+    return "{\"action\":\"ask|end_defense\",\"reason\":\"...\",\"question\":{\"dimension\":\"...\",\"text\":\"...\",\"focus\":\"...\",\"evidence\":\"...\"}}。禁止输出 questions 字段。"
+
+
 def _available_tools() -> list[dict[str, str]]:
     return [
         {"tool": "list_materials", "args": "{}", "description": "列出可读取的提交材料"},
@@ -264,10 +305,23 @@ def _normalize_single_question(raw: Any, question_id: str) -> dict[str, str] | N
         "id": question_id,
         "dimension": str(raw.get("dimension", "综合能力")).strip() or "综合能力",
         "is_followup": False,
+        "source": str(raw.get("source", "api_agent")).strip() or "api_agent",
         "text": text,
         "focus": str(raw.get("focus", "考察学生对提交材料的真实理解。")).strip(),
         "evidence": str(raw.get("evidence", "")).strip(),
     }
+
+
+def _first_question_payload(raw: Any) -> Any:
+    if not isinstance(raw, dict):
+        return None
+    question = raw.get("question")
+    if isinstance(question, dict):
+        return question
+    questions = raw.get("questions")
+    if isinstance(questions, list) and questions:
+        return questions[0]
+    return None
 
 
 def _normalize_next_step(raw: Any, question_id: str) -> dict[str, Any] | None:
@@ -283,7 +337,7 @@ def _normalize_next_step(raw: Any, question_id: str) -> dict[str, Any] | None:
             "reason": reason or "AI 助教判断继续追问已无法有效验证学生理解。",
             "question": None,
         }
-    question = _normalize_single_question(raw.get("question"), question_id)
+    question = _normalize_single_question(_first_question_payload(raw), question_id)
     if not question:
         return None
     return {

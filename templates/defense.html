@@ -63,7 +63,7 @@
 
   <form class="defense-form" method="post" action="/defense/{{ session.id }}/answer">
     <h2>现场答辩</h2>
-    <p class="muted">第 {{ current_index + 1 }} 轮，最多 7 轮。AI 助教会结合历史回答、材料证据和隐藏验收结果，决定继续追问、换题或提前结束。</p>
+    <p class="muted">第 {{ current_index + 1 }} 轮，最多 4 轮。AI 助教会结合历史回答、材料证据和隐藏验收结果，决定继续追问、换题或提前结束。</p>
     {% if current_question %}
     <label class="question-card" for="answer">
       <span>{{ current_question.dimension }}</span>

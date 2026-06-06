@@ -8,7 +8,7 @@
   </head>
   <body>
     <header class="topbar">
-      <a class="brand" href="/assignment">
+      <a class="brand" href="/">
         <span class="brand-mark">CV</span>
         <span>
           <strong>CoCode Viva</strong>
@@ -16,14 +16,21 @@
         </span>
       </a>
       <nav class="nav">
+        {% if user %}
+        {% if user.role == "student" %}
+        <a class="{{ 'active' if page == 'student' else '' }}" href="/student">学生端</a>
         <a class="{{ 'active' if page == 'assignment' else '' }}" href="/assignment">题目要求</a>
-        <a class="{{ 'active' if page == 'defense' else '' }}" href="/defense">提交与答辩</a>
-        {% if session and session.id %}
-        <a class="{{ 'active' if page == 'report' else '' }}" href="/report/{{ session.id }}">评分报告</a>
-        <a class="{{ 'active' if page == 'debug' else '' }}" href="/debug/{{ session.id }}">后台证据</a>
         {% else %}
-        <a class="disabled {{ 'active' if page == 'report' else '' }}">评分报告</a>
-        <a class="disabled {{ 'active' if page == 'debug' else '' }}">后台证据</a>
+        <a class="{{ 'active' if page == 'teacher' else '' }}" href="/teacher">教师端</a>
+        <a class="{{ 'active' if page == 'assignment' else '' }}" href="/assignment">题目要求</a>
+        {% if session and session.id %}
+        <a class="{{ 'active' if page == 'debug' else '' }}" href="/teacher/debug/{{ session.id }}">后台证据</a>
+        {% endif %}
+        {% endif %}
+        <form method="post" action="/logout"><button type="submit">退出</button></form>
+        {% else %}
+        <a class="{{ 'active' if page == 'assignment' else '' }}" href="/assignment">题目要求</a>
+        <a class="{{ 'active' if page == 'login' else '' }}" href="/login">登录/注册</a>
         {% endif %}
       </nav>
     </header>

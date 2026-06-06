@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+{% set current_index = session.current_index or 0 %}
+{% set current_question = session.questions[current_index] if current_index < session.questions|length else None %}
+
+<section class="page-head compact-head">
+  <p class="eyebrow">学生端 · 现场答辩</p>
+  <h1>{{ session.portal.assignment_title if session.portal else "TaskFlow Pro" }}</h1>
+  <p>每题只问一个小点，建议 1 到 2 分钟作答；总答辩控制在约 10 分钟内。</p>
+</section>
+
+{% if error %}
+<div class="alert">{{ error }}</div>
+{% endif %}
+
+<section class="section defense-solo">
+  <div class="progress-strip">
+    <span>第 {{ current_index + 1 }} 轮</span>
+    <span>最多 4 轮</span>
+    <span>已回答 {{ session.answers|length }} 题</span>
+  </div>
+
+  <form class="defense-form compact-defense" method="post" action="/student/defense/{{ session.id }}/answer">
+    {% if current_question %}
+    <label class="question-card" for="answer">
+      <span>{{ current_question.dimension }}</span>
+      <strong>{{ current_question.text }}</strong>
+      <small>{{ current_question.focus }}</small>
+      <textarea id="answer" name="answer" rows="5" required autofocus placeholder="请结合你自己的代码、报告或 AI 协作过程简要回答。"></textarea>
+    </label>
+    <button class="primary-button wide" type="submit">提交本题回答</button>
+    {% else %}
+    <p>答辩已完成，系统正在等待教师审核。</p>
+    <a class="primary-button wide" href="/student/submissions/{{ session.id }}/done">查看提交状态</a>
+    {% endif %}
+  </form>
+
+  {% if session.answers %}
+  <details class="history-box">
+    <summary>已回答问题</summary>
+    <div class="answer-list">
+      {% for question in session.questions %}
+      {% if session.answers.get(question.id) %}
+      <article>
+        <span>{{ question.dimension }}</span>
+        <h3>{{ question.text }}</h3>
+        <p>{{ session.answers.get(question.id) }}</p>
+      </article>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </details>
+  {% endif %}
+</section>
+{% endblock %}

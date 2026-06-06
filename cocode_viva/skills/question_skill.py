@@ -12,29 +12,33 @@ def generate_questions(analysis: dict) -> list[dict]:
             "id": "q1",
             "dimension": "代码理解",
             "is_followup": False,
-            "text": "请说明 TaskFlow 的任务数据模型如何支持优先级、截止日期、标签、归档状态和统计功能。哪些字段是你后来从 AI 初版中调整或新增的？",
-            "focus": "能否解释高级字段和最终代码相对 AI 初版的演进。",
+            "source": "local_seed",
+            "text": "最终任务对象里，哪个字段是你补得最关键？为什么？",
+            "focus": "能否解释一个具体字段及其工程意义。",
         },
         {
             "id": "q2",
             "dimension": "AI 协作",
             "is_followup": False,
-            "text": "请比较 `ai/initial_code.py` 和 `final/taskflow.py`：你认为最关键的三处变化是什么？每一处变化解决了 AI 初版的什么问题？",
-            "focus": "是否能把个人贡献落到初版代码和最终代码的具体差异上。",
+            "source": "local_seed",
+            "text": "AI 初版代码里，你最先修掉的一个问题是什么？",
+            "focus": "是否能说出初版缺陷和自己的修改。",
         },
         {
             "id": "q3",
             "dimension": "系统验收",
             "is_followup": False,
-            "text": "系统隐藏验收会检查组合查询、排序、非法输入、导入导出和归档等行为。请说明你的代码中哪些函数负责这些能力，以及你如何确认它们能被外部验收调用。",
-            "focus": "是否理解系统验收关注真实行为和固定函数接口，而不是只跑通 CLI。",
+            "source": "local_seed",
+            "text": "隐藏验收会调用哪个函数？请举一个你实现的例子。",
+            "focus": "是否理解固定函数接口和系统验收。",
         },
         {
             "id": "q4",
             "dimension": "过程反思",
             "is_followup": False,
-            "text": "请选 `ai/full_conversation.md` 中最能体现你个人思考的一轮，说明那轮提示词的目标、AI 建议的价值或问题，以及你最终如何取舍。",
-            "focus": "是否有明确的提示策略、验证动作和工程取舍。",
+            "source": "local_seed",
+            "text": "哪一轮 AI 对话最体现你的判断？一句话说明。",
+            "focus": "是否能指出具体 AI 协作证据。",
         },
     ]
 
@@ -43,15 +47,17 @@ def generate_questions(analysis: dict) -> list[dict]:
             "id": "q5",
             "dimension": "边界情况",
             "is_followup": False,
-            "text": "如果用户输入非法截止日期、非法优先级或不存在的标签筛选条件，你的程序应该如何处理？当前实现是否覆盖？",
-            "focus": "追问未明显体现的日期校验能力。",
+            "source": "local_seed",
+            "text": "非法日期输入时，你的代码会怎么处理？",
+            "focus": "追问日期校验能力。",
         })
     else:
         questions.append({
             "id": "q5",
             "dimension": "边界情况",
             "is_followup": False,
-            "text": "你是如何校验截止日期格式的？当日期校验与排序、统计或导入功能结合时，最容易出现什么边界错误？",
+            "source": "local_seed",
+            "text": "你用哪个函数校验截止日期？",
             "focus": "确认学生理解日期校验实现。",
         })
 
@@ -60,15 +66,17 @@ def generate_questions(analysis: dict) -> list[dict]:
             "id": "q6",
             "dimension": "工程扩展",
             "is_followup": False,
-            "text": "作业要求包含导入导出能力。请说明你为什么没有实现，或者如果要补充，你会如何设计文件格式、冲突处理和校验流程？",
-            "focus": "追问缺失的必做工程功能和设计补救能力。",
+            "source": "local_seed",
+            "text": "导入导出没完成时，你会先补哪个函数？",
+            "focus": "追问缺失功能的补救设计。",
         })
     else:
         questions.append({
             "id": "q6",
             "dimension": "工程扩展",
             "is_followup": False,
-            "text": "导入导出功能如何处理重复 id、字段缺失或损坏 JSON？你是否保留了数据校验的一致入口？",
+            "source": "local_seed",
+            "text": "导入遇到重复 id 时，你怎么处理？",
             "focus": "考察数据迁移和持久化的健壮性。",
         })
 
@@ -77,7 +85,8 @@ def generate_questions(analysis: dict) -> list[dict]:
             "id": "q7",
             "dimension": "原创性",
             "is_followup": False,
-            "text": "你的 AI 交互记录少于要求的 5 轮有效迭代。请说明最终代码中哪些关键修改来自你的独立判断，而不是直接复制 AI 输出。",
+            "source": "local_seed",
+            "text": "最终代码里，哪一处最能证明是你自己改的？",
             "focus": "交互证据不足时追问个人贡献。",
         })
     elif execution and execution.get("passed", 0) < execution.get("total", 0):
@@ -85,7 +94,8 @@ def generate_questions(analysis: dict) -> list[dict]:
             "id": "q7",
             "dimension": "系统验收",
             "is_followup": False,
-            "text": "系统隐藏验收发现部分行为没有通过。请结合你的函数接口说明最可能失败的位置，以及你会如何定位和修复。",
+            "source": "local_seed",
+            "text": "隐藏验收失败时，你会先查哪个函数？",
             "focus": "考察对验收失败的定位能力。",
         })
     else:
@@ -93,7 +103,8 @@ def generate_questions(analysis: dict) -> list[dict]:
             "id": "q7",
             "dimension": "原创性",
             "is_followup": False,
-            "text": "最终报告中你声称的关键贡献，哪一项最能体现你的工程能力？请结合具体函数、系统验收要求和 AI 对话记录说明。",
+            "source": "local_seed",
+            "text": "报告里哪一项贡献最关键？对应哪个函数？",
             "focus": "要求把贡献落到具体证据上。",
         })
 

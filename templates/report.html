@@ -10,9 +10,18 @@
 {% if not report %}
 <section class="section">
   <div class="alert">该会话还没有提交答辩回答。</div>
-  <a class="primary-button" href="/defense">返回答辩页面</a>
+  <a class="primary-button" href="/defense/{{ session.id }}">返回答辩页面</a>
 </section>
 {% else %}
+{% if session.portal %}
+<section class="section compact-meta">
+  <div><span>学生</span><strong>{{ session.portal.student_name }}</strong></div>
+  <div><span>班级</span><strong>{{ session.portal.class_name }}</strong></div>
+  <div><span>作业</span><strong>{{ session.portal.assignment_title }}</strong></div>
+  <div><span>状态</span><strong>{{ session.portal.status }}</strong></div>
+</section>
+{% endif %}
+
 <section class="score-hero">
   <div>
     <span>总分</span>
@@ -25,6 +34,31 @@
     <small>{{ report.contribution_level }}</small>
   </div>
 </section>
+
+{% if can_review %}
+<section class="section review-panel">
+  <div>
+    <h2>教师审核</h2>
+    <p class="muted">AI 分数是参考，最终成绩由教师结合报告、后台证据和课程标准确认。</p>
+    {% if session.teacher_review %}
+    <div class="callout-inline">
+      已审核：{{ session.teacher_review.teacher_name }} 给出最终分 {{ session.teacher_review.final_score }}。
+      {% if session.teacher_review.comment %}意见：{{ session.teacher_review.comment }}{% endif %}
+    </div>
+    {% endif %}
+  </div>
+  <form method="post" action="/teacher/report/{{ session.id }}/review">
+    <label>最终分数
+      <input name="final_score" type="number" min="0" max="100" value="{{ session.teacher_review.final_score if session.teacher_review else report.total }}" required>
+    </label>
+    <label>审核意见
+      <textarea name="comment" rows="4" placeholder="说明调整依据，可留空。">{{ session.teacher_review.comment if session.teacher_review else "" }}</textarea>
+    </label>
+    <button class="primary-button" type="submit">保存教师审核</button>
+    <a class="secondary-button" href="/teacher/debug/{{ session.id }}">查看后台证据</a>
+  </form>
+</section>
+{% endif %}
 
 {% if report.cap_note %}
 <section class="section callout">
