@@ -2,7 +2,7 @@
 {% block content %}
 {% set execution = session.analysis.execution %}
 {% set report = session.report %}
-{% set initial_tools = session.agent_tool_results or [] %}
+{% set first_tools = session.agent_tool_results or [] %}
 {% set report_tools = session.report_agent_tool_results or [] %}
 {% set next_groups = session.next_question_tool_results or [] %}
 
@@ -10,6 +10,10 @@
   <p class="eyebrow">后台证据</p>
   <h1>一次会话的完整证据链</h1>
   <p>用于教师复核：材料读取、隐藏验收、Agent 工具调用、日志快照与答辩记录都在这里。</p>
+  <div class="action-row">
+    <a class="secondary-button" href="/teacher/submissions/{{ session.id }}/files">查看提交文件</a>
+    <a class="secondary-button" href="/teacher/submissions/{{ session.id }}/download">下载提交 zip</a>
+  </div>
 </section>
 
 <section class="debug-summary">
@@ -22,8 +26,8 @@
     <strong>{{ execution.passed }}/{{ execution.total }}</strong>
   </div>
   <div>
-    <span>AI 交互</span>
-    <strong>{{ session.analysis.interaction.rounds }} 轮</strong>
+    <span>报告字数</span>
+    <strong>{{ session.analysis.interaction.student_report_chars }}</strong>
   </div>
   <div>
     <span>缺失文件</span>
@@ -43,7 +47,7 @@
     </div>
     <ol class="compact-flow">
       <li>安全解压 zip</li>
-      <li>读取固定 7 个文件</li>
+      <li>读取固定 3 个文件</li>
       <li>静态分析最终代码</li>
       <li>执行教师隐藏验收</li>
       <li>API Agent 基于工具证据追问与评分</li>
@@ -88,12 +92,12 @@
   <article class="debug-card">
     <div class="card-head">
       <h2>Agent 工具调用</h2>
-      <span>{{ initial_tools|length + report_tools|length }} 次主要调用</span>
+      <span>{{ first_tools|length + report_tools|length }} 次主要调用</span>
     </div>
     <div class="tool-matrix">
       <div>
         <strong>首问生成</strong>
-        <span>{{ initial_tools|length }} 次</span>
+        <span>{{ first_tools|length }} 次</span>
       </div>
       <div>
         <strong>动态追问</strong>
@@ -113,7 +117,7 @@
     <details class="debug-details">
       <summary>查看工具调用明细</summary>
       <div class="tool-log compact-tools">
-        {% for item in initial_tools %}
+        {% for item in first_tools %}
         <div><strong>首问 · {{ item.tool }}</strong><span>{{ "成功" if item.ok else "失败" }}</span></div>
         {% endfor %}
         {% for group in next_groups %}
@@ -122,7 +126,7 @@
         {% for item in report_tools %}
         <div><strong>报告 · {{ item.tool }}</strong><span>{{ "成功" if item.ok else "失败" }}</span></div>
         {% endfor %}
-        {% if not initial_tools and not next_groups and not report_tools %}
+        {% if not first_tools and not next_groups and not report_tools %}
         <div><strong>未调用 API 工具</strong><span>本地规则</span></div>
         {% endif %}
       </div>

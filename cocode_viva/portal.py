@@ -11,6 +11,7 @@ from cocode_viva.config import DATA_DIR, SESSION_DIR
 
 
 PORTAL_PATH = DATA_DIR / "portal.json"
+TEACHER_INVITE_CODE = "TEACH2026"
 
 
 def now_iso() -> str:
@@ -56,6 +57,8 @@ def register_user(role: str, username: str, password: str, display_name: str, cl
         if not klass:
             return None, "班级邀请码不存在，请向教师确认。"
         class_id = klass["id"]
+    elif class_code.strip().upper() != TEACHER_INVITE_CODE:
+        return None, "教师注册码不正确，请向课程管理员确认。"
 
     user_id = secrets.token_hex(8)
     user = {
@@ -134,7 +137,8 @@ def get_assignment(assignment_id: str) -> dict[str, Any] | None:
 
 def list_submissions(user: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     submissions = []
-    for path in sorted(SESSION_DIR.glob("*.json"), key=lambda item: item.stat().st_mtime, reverse=True):
+    paths = sorted(SESSION_DIR.glob("*.json"), key=lambda item: item.stat().st_mtime, reverse=True)
+    for path in paths:
         try:
             session = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
@@ -148,6 +152,8 @@ def list_submissions(user: dict[str, Any] | None = None) -> list[dict[str, Any]]
             if user["role"] == "teacher":
                 pass
         submissions.append(_submission_summary(session))
+    if user and user["role"] == "teacher":
+        submissions.sort(key=lambda item: (-int(item.get("risk_rank", 0)), item.get("reviewed"), item.get("submitted_at", "")), reverse=False)
     return submissions
 
 
@@ -160,7 +166,7 @@ def attach_submission_context(session: dict[str, Any], user: dict[str, Any], ass
         "class_id": klass.get("id", ""),
         "class_name": klass.get("name", ""),
         "assignment_id": assignment.get("id", assignment_id),
-        "assignment_title": assignment.get("title", "TaskFlow Pro"),
+        "assignment_title": assignment.get("title", "ImageLab"),
         "submitted_at": now_iso(),
         "status": "defending",
     }
@@ -190,6 +196,7 @@ def _submission_summary(session: dict[str, Any]) -> dict[str, Any]:
     meta = session.get("portal", {})
     report = session.get("report") or {}
     review = session.get("teacher_review") or {}
+    risk_flags = report.get("risk_flags") or []
     return {
         "id": session.get("id", ""),
         "student_name": meta.get("student_name", "未知学生"),
@@ -201,6 +208,10 @@ def _submission_summary(session: dict[str, Any]) -> dict[str, Any]:
         "ai_score": report.get("total"),
         "final_score": review.get("final_score"),
         "reviewed": bool(review),
+        "risk_rank": report.get("risk_rank", 0),
+        "risk_label": report.get("risk_label", "未生成" if not report else "常规"),
+        "risk_level": report.get("risk_level", "none" if not report else "low"),
+        "risk_reasons": [str(flag.get("label", "")) for flag in risk_flags[:3] if flag.get("label")],
     }
 
 
@@ -221,8 +232,8 @@ def _default_store() -> dict[str, Any]:
             "image-lab": {
                 "id": "image-lab",
                 "class_id": "class-ai-2026",
-                "title": "ImageLab：AI 协作图像变换作业",
-                "description": "实现图片读取与多种图像变换，并通过 AI 助教短答辩。",
+                "title": "ImageLab：PIL 图像变换作业",
+                "description": "实现图片读取与多种图像变换，并通过系统助教短答辩。",
                 "created_at": now,
             }
         },

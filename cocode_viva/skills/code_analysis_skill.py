@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import ast
+
+
 def analyze_code(source: str) -> dict:
     result = {
         "line_count": len([line for line in source.splitlines() if line.strip()]),
         "functions": [],
+        "function_lines": {},
         "classes": [],
         "imports": [],
         "syntax_ok": True,
@@ -17,6 +20,7 @@ def analyze_code(source: str) -> dict:
         for node in ast.walk(tree):
             if isinstance(node, ast.FunctionDef):
                 result["functions"].append(node.name)
+                result["function_lines"][node.name] = getattr(node, "lineno", None)
             elif isinstance(node, ast.ClassDef):
                 result["classes"].append(node.name)
             elif isinstance(node, ast.Import):

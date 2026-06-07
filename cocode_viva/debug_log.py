@@ -78,8 +78,8 @@ def _event_summary(event: str, payload: Any) -> str:
             f"文件 {len(payload.get('extracted_files', []))} 个，"
             f"代码 {payload.get('line_count', 0)} 行，"
             f"隐藏验收 {payload.get('hidden_tests', '-')}, "
-            f"AI 交互 {payload.get('interaction_rounds', 0)} 轮，"
-            f"首问来源 {payload.get('initial_question_source', '-')}。"
+            f"报告 {payload.get('report_chars', 0)} 字符，"
+            f"首问来源 {payload.get('first_question_source', '-')}。"
         )
     if event == "next_question_generated":
         return (

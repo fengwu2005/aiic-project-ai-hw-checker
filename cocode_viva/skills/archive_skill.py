@@ -15,7 +15,7 @@ def safe_extract_zip(zip_path: Path, target_dir: Path) -> list[str]:
     """Extract a zip file while preventing path traversal and oversized files."""
 
     if zip_path.stat().st_size > MAX_ZIP_BYTES:
-        raise ArchiveError("压缩包超过 8MB，请只提交源代码、记录和报告文本。")
+        raise ArchiveError("压缩包超过 8MB，请只提交 README、终版代码和报告文本。")
 
     if target_dir.exists():
         shutil.rmtree(target_dir)
@@ -41,4 +41,3 @@ def safe_extract_zip(zip_path: Path, target_dir: Path) -> list[str]:
             extracted.append(destination.relative_to(target_dir).as_posix())
 
     return extracted
-

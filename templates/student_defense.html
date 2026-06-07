@@ -5,7 +5,7 @@
 
 <section class="page-head compact-head">
   <p class="eyebrow">学生端 · 现场答辩</p>
-  <h1>{{ session.portal.assignment_title if session.portal else "TaskFlow Pro" }}</h1>
+  <h1>{{ session.portal.assignment_title if session.portal else "ImageLab" }}</h1>
   <p>每题只问一个小点，建议 1 到 2 分钟作答；总答辩控制在约 10 分钟内。</p>
 </section>
 
@@ -26,7 +26,7 @@
       <span>{{ current_question.dimension }}</span>
       <strong>{{ current_question.text }}</strong>
       <small>{{ current_question.focus }}</small>
-      <textarea id="answer" name="answer" rows="5" required autofocus placeholder="请结合你自己的代码、报告或 AI 协作过程简要回答。"></textarea>
+      <textarea id="answer" name="answer" rows="5" required autofocus placeholder="请结合你的图像代码、报告或验收证据简要回答。"></textarea>
     </label>
     <button class="primary-button wide" type="submit">提交本题回答</button>
     {% else %}

@@ -3,14 +3,14 @@
 {% set report = session.report %}
 <section class="page-head">
   <p class="eyebrow">最终评分参考</p>
-  <h1>TaskFlow 作业答辩报告</h1>
+  <h1>ImageLab 作业答辩报告</h1>
   <p>报告基于提交材料与现场答辩回答生成，定位为助教评分参考，不替代教师最终判断。</p>
 </section>
 
 {% if not report %}
 <section class="section">
   <div class="alert">该会话还没有提交答辩回答。</div>
-  <a class="primary-button" href="/defense/{{ session.id }}">返回答辩页面</a>
+  <a class="primary-button" href="/teacher">返回教师端</a>
 </section>
 {% else %}
 {% if session.portal %}
@@ -29,17 +29,34 @@
     <small>/ 100</small>
   </div>
   <div>
-    <span>个人贡献比例估计</span>
+    <span>掌握可信度估计</span>
     <strong>{{ report.contribution }}%</strong>
     <small>{{ report.contribution_level }}</small>
   </div>
 </section>
 
+{% if report.risk_flags %}
+<section class="section">
+  <div class="card-head">
+    <h2>风险排序依据</h2>
+    <span>{{ report.risk_label }}</span>
+  </div>
+  <div class="risk-flag-list">
+    {% for flag in report.risk_flags %}
+    <article class="{{ flag.level }}">
+      <strong>{{ flag.label }}</strong>
+      <p>{{ flag.detail }}</p>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
 {% if can_review %}
 <section class="section review-panel">
   <div>
     <h2>教师审核</h2>
-    <p class="muted">AI 分数是参考，最终成绩由教师结合报告、后台证据和课程标准确认。</p>
+    <p class="muted">系统分数是参考，最终成绩由教师结合报告、后台证据和课程标准确认。</p>
     {% if session.teacher_review %}
     <div class="callout-inline">
       已审核：{{ session.teacher_review.teacher_name }} 给出最终分 {{ session.teacher_review.final_score }}。
@@ -55,6 +72,8 @@
       <textarea name="comment" rows="4" placeholder="说明调整依据，可留空。">{{ session.teacher_review.comment if session.teacher_review else "" }}</textarea>
     </label>
     <button class="primary-button" type="submit">保存教师审核</button>
+    <a class="secondary-button" href="/teacher/submissions/{{ session.id }}/files">查看提交文件</a>
+    <a class="secondary-button" href="/teacher/submissions/{{ session.id }}/download">下载提交 zip</a>
     <a class="secondary-button" href="/teacher/debug/{{ session.id }}">查看后台证据</a>
   </form>
 </section>
@@ -75,18 +94,54 @@
       <div><span>最终程序功能</span><strong>{{ report.material_scores.functionality }}/25</strong></div>
       <div><span>代码质量</span><strong>{{ report.material_scores.code_quality }}/15</strong></div>
       <div><span>系统验收与验证</span><strong>{{ report.material_scores.validation }}/15</strong></div>
-      <div><span>AI 协作过程</span><strong>{{ report.material_scores.process }}/15</strong></div>
+      <div><span>报告与验证说明</span><strong>{{ report.material_scores.process }}/15</strong></div>
       <div><span>现场答辩有效性</span><strong>{{ report.defense_score }}/20</strong></div>
-      <div><span>报告与原创性</span><strong>{{ report.material_scores["report"] }}/10</strong></div>
+      <div><span>报告完整性</span><strong>{{ report.material_scores["report"] }}/10</strong></div>
     </div>
   </div>
   <div>
-    <h2>原创性判断依据</h2>
+    <h2>掌握度判断依据</h2>
     <ul class="check-list">
       {% for item in report.basis %}
       <li>{{ item }}</li>
       {% endfor %}
     </ul>
+  </div>
+</section>
+
+<section class="section">
+  <div class="card-head">
+    <h2>逐题答辩评分解释</h2>
+    <span>{{ report.defense_detail.raw }}/{{ report.defense_detail.max_raw }} 原始点</span>
+  </div>
+  <div class="answer-list">
+    {% for item in report.per_question %}
+    <article>
+      <span>{{ item.dimension }} · {{ item.score }}/{{ item.max_score }}</span>
+      <h3>{{ item.question }}</h3>
+      {% if item.evidence %}
+      <div class="evidence-box">证据锚点：{{ item.evidence }}</div>
+      {% endif %}
+      <p>{{ item.answer if item.answer else "未回答" }}</p>
+      <div class="score-explain">
+        <strong>{{ item.comment }}</strong>
+        {% if item.evidence_hits %}
+        <ul class="check-list">
+          {% for hit in item.evidence_hits %}
+          <li>{{ hit }}</li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+        {% if item.gaps %}
+        <ul class="risk-list">
+          {% for gap in item.gaps %}
+          <li>{{ gap }}</li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+      </div>
+    </article>
+    {% endfor %}
   </div>
 </section>
 
@@ -115,7 +170,7 @@
 
 {% if report.agent_overlay %}
 <section class="section">
-  <h2>AI 助教 Agent 评语</h2>
+  <h2>系统助教 Agent 评语</h2>
   {% if report.agent_overlay.total_adjustment_reason %}
   <p>{{ report.agent_overlay.total_adjustment_reason }}</p>
   {% endif %}

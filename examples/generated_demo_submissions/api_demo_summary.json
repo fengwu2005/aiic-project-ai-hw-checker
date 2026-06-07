@@ -1,0 +1,78 @@
+[
+  {
+    "student": "陈安然",
+    "kind": "excellent",
+    "session": "5ca4c45bba16",
+    "agent_enabled": true,
+    "materials": {
+      "functionality": 25,
+      "code_quality": 15,
+      "validation": 15,
+      "process": 15,
+      "report": 7
+    },
+    "hidden": "12/12",
+    "defense": 15,
+    "validity": "valid",
+    "total": 92,
+    "risk": "需复核",
+    "zip": "examples/image_lab_excellent_submission.zip"
+  },
+  {
+    "student": "李博文",
+    "kind": "partial",
+    "session": "c4d587d6d169",
+    "agent_enabled": true,
+    "materials": {
+      "functionality": 23,
+      "code_quality": 12,
+      "validation": 11,
+      "process": 15,
+      "report": 8
+    },
+    "hidden": "9/12",
+    "defense": 15,
+    "validity": "valid",
+    "total": 84,
+    "risk": "高风险",
+    "zip": "examples/image_lab_partial_submission.zip"
+  },
+  {
+    "student": "王嘉宁",
+    "kind": "weak",
+    "session": "d84980857f1c",
+    "agent_enabled": true,
+    "materials": {
+      "functionality": 23,
+      "code_quality": 9,
+      "validation": 11,
+      "process": 15,
+      "report": 6
+    },
+    "hidden": "9/12",
+    "defense": 15,
+    "validity": "valid",
+    "total": 79,
+    "risk": "高风险",
+    "zip": "examples/image_lab_weak_submission.zip"
+  },
+  {
+    "student": "赵明远",
+    "kind": "broken",
+    "session": "c3c1627c9ac8",
+    "agent_enabled": true,
+    "materials": {
+      "functionality": 18,
+      "code_quality": 6,
+      "validation": 4,
+      "process": 15,
+      "report": 6
+    },
+    "hidden": "3/12",
+    "defense": 9,
+    "validity": "weak",
+    "total": 55,
+    "risk": "高风险",
+    "zip": "examples/image_lab_broken_submission.zip"
+  }
+]

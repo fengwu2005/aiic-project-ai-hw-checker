@@ -1,6 +1,21 @@
 from __future__ import annotations
 
 
+def _code_ref(analysis: dict, function_name: str) -> str:
+    line = analysis.get("code", {}).get("function_lines", {}).get(function_name)
+    if line:
+        return f"final/image_ops.py:{line} `{function_name}`"
+    return f"final/image_ops.py `{function_name}`"
+
+
+def _hidden_case(analysis: dict, keyword: str) -> str:
+    for case in analysis.get("execution", {}).get("cases", []):
+        name = str(case.get("name", ""))
+        if keyword.lower() in name.lower():
+            return f"隐藏验收 `{name}`：{'通过' if case.get('ok') else '失败'}"
+    return f"隐藏验收包含 `{keyword}` 相关用例"
+
+
 def generate_questions(analysis: dict) -> list[dict]:
     code = analysis["code"]
     interaction = analysis["interaction"]
@@ -13,43 +28,48 @@ def generate_questions(analysis: dict) -> list[dict]:
             "dimension": "代码理解",
             "is_followup": False,
             "source": "local_seed",
-            "text": "最终任务对象里，哪个字段是你补得最关键？为什么？",
-            "focus": "能否解释一个具体字段及其工程意义。",
+            "text": "请解释 `load_image` 为什么要统一图像模式。",
+            "focus": "考察是否理解图像模式、RGB 转换和后续像素处理的关系。",
+            "evidence": _code_ref(analysis, "load_image"),
         },
         {
             "id": "q2",
-            "dimension": "AI 协作",
+            "dimension": "实现方法",
             "is_followup": False,
             "source": "local_seed",
-            "text": "AI 初版代码里，你最先修掉的一个问题是什么？",
-            "focus": "是否能说出初版缺陷和自己的修改。",
+            "text": "`blur_image` 的 3x3 均值是怎么计算的？",
+            "focus": "考察是否能说明窗口、通道平均和边界处理。",
+            "evidence": f"{_code_ref(analysis, 'blur_image')}；{_hidden_case(analysis, 'blur_image')}",
         },
         {
             "id": "q3",
-            "dimension": "系统验收",
+            "dimension": "边界情况",
             "is_followup": False,
             "source": "local_seed",
-            "text": "隐藏验收会调用哪个函数？请举一个你实现的例子。",
-            "focus": "是否理解固定函数接口和系统验收。",
+            "text": "`crop_image` 如何判断裁剪框非法？为什么要这样做？",
+            "focus": "考察参数校验、坐标边界和异常设计。",
+            "evidence": f"{_code_ref(analysis, 'crop_image')}；{_hidden_case(analysis, 'parameter validation')}",
         },
         {
             "id": "q4",
-            "dimension": "过程反思",
+            "dimension": "报告证据",
             "is_followup": False,
             "source": "local_seed",
-            "text": "哪一轮 AI 对话最体现你的判断？一句话说明。",
-            "focus": "是否能指出具体 AI 协作证据。",
+            "text": "报告里最关键的实现，对应哪个函数？",
+            "focus": "考察学生能否把报告描述绑定到具体代码证据。",
+            "evidence": "report/report.md 的实现说明；final/image_ops.py 对应函数实现",
         },
     ]
 
-    if not features["date_validation"]:
+    if not features["parameter_validation"]:
         questions.append({
             "id": "q5",
             "dimension": "边界情况",
             "is_followup": False,
             "source": "local_seed",
-            "text": "非法日期输入时，你的代码会怎么处理？",
-            "focus": "追问日期校验能力。",
+            "text": "非法缩放比例或裁剪框时，你的代码怎么处理？",
+            "focus": "追问参数校验能力。",
+            "evidence": _hidden_case(analysis, "parameter validation"),
         })
     else:
         questions.append({
@@ -57,18 +77,20 @@ def generate_questions(analysis: dict) -> list[dict]:
             "dimension": "边界情况",
             "is_followup": False,
             "source": "local_seed",
-            "text": "你用哪个函数校验截止日期？",
-            "focus": "确认学生理解日期校验实现。",
+            "text": "你在哪个函数里校验图像参数？",
+            "focus": "确认学生理解参数校验实现。",
+            "evidence": f"{_code_ref(analysis, 'resize_image')}；{_code_ref(analysis, 'crop_image')}；{_code_ref(analysis, 'median_filter')}",
         })
 
-    if not features["import_export"]:
+    if not features["edge_detection"]:
         questions.append({
             "id": "q6",
             "dimension": "工程扩展",
             "is_followup": False,
             "source": "local_seed",
-            "text": "导入导出没完成时，你会先补哪个函数？",
-            "focus": "追问缺失功能的补救设计。",
+            "text": "边缘检测没完成时，你会先补哪部分？",
+            "focus": "追问缺失图像功能的补救设计。",
+            "evidence": _hidden_case(analysis, "edge_detect"),
         })
     else:
         questions.append({
@@ -76,18 +98,20 @@ def generate_questions(analysis: dict) -> list[dict]:
             "dimension": "工程扩展",
             "is_followup": False,
             "source": "local_seed",
-            "text": "导入遇到重复 id 时，你怎么处理？",
-            "focus": "考察数据迁移和持久化的健壮性。",
+            "text": "`edge_detect` 为什么要处理卷积结果的正负和范围？",
+            "focus": "考察卷积响应、边缘强度、像素范围和 clamp 设计。",
+            "evidence": f"{_code_ref(analysis, 'edge_detect')}；{_hidden_case(analysis, 'edge_detect')}",
         })
 
-    if interaction["rounds"] < 5:
+    if not interaction.get("mentions_validation"):
         questions.append({
             "id": "q7",
-            "dimension": "原创性",
+            "dimension": "验证说明",
             "is_followup": False,
             "source": "local_seed",
-            "text": "最终代码里，哪一处最能证明是你自己改的？",
-            "focus": "交互证据不足时追问个人贡献。",
+            "text": "你用什么输入验证图像函数正确？",
+            "focus": "报告验证证据不足时追问测试输入、预期输出和验收意识。",
+            "evidence": "report/report.md 验证说明；教师隐藏验收结果",
         })
     elif execution and execution.get("passed", 0) < execution.get("total", 0):
         questions.append({
@@ -95,17 +119,19 @@ def generate_questions(analysis: dict) -> list[dict]:
             "dimension": "系统验收",
             "is_followup": False,
             "source": "local_seed",
-            "text": "隐藏验收失败时，你会先查哪个函数？",
+            "text": "隐藏验收失败时，你会先查哪个图像函数？",
             "focus": "考察对验收失败的定位能力。",
+            "evidence": f"隐藏验收通过 {execution.get('passed', 0)}/{execution.get('total', 0)}",
         })
     else:
         questions.append({
             "id": "q7",
-            "dimension": "原创性",
+            "dimension": "掌握证据",
             "is_followup": False,
             "source": "local_seed",
-            "text": "报告里哪一项贡献最关键？对应哪个函数？",
+            "text": "报告里哪项图像处理贡献最关键？对应哪个函数？",
             "focus": "要求把贡献落到具体证据上。",
+            "evidence": "report/report.md 个人实现说明段落；final/image_ops.py 对应函数实现",
         })
 
     return questions[:5]

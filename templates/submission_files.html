@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+{% set is_teacher = user.role == "teacher" %}
+{% set prefix = "/teacher/submissions/" if is_teacher else "/student/submissions/" %}
+<section class="page-head compact-head">
+  <p class="eyebrow">{{ "教师端" if is_teacher else "学生端" }} · 提交文件</p>
+  <h1>{{ session.portal.assignment_title if session.portal else "ImageLab" }}</h1>
+  <p>
+    {% if is_teacher %}
+    查看学生提交的 README、终版代码和报告原文，可下载为 zip 进行离线复核。
+    {% else %}
+    这里展示你本次提交的 README、终版代码和报告原文，也可以下载提交 zip 留档。
+    {% endif %}
+  </p>
+</section>
+
+<section class="section compact-meta">
+  <div><span>学生</span><strong>{{ session.portal.student_name if session.portal else "-" }}</strong></div>
+  <div><span>班级</span><strong>{{ session.portal.class_name if session.portal else "-" }}</strong></div>
+  <div><span>状态</span><strong>{{ session.portal.status if session.portal else "-" }}</strong></div>
+  <div><span>提交时间</span><strong>{{ session.portal.submitted_at[:19].replace("T", " ") if session.portal and session.portal.submitted_at else "-" }}</strong></div>
+</section>
+
+<section class="section">
+  <div class="card-head">
+    <h2>提交包</h2>
+    <span>{{ files|length }} 个固定文件</span>
+  </div>
+  <div class="action-row">
+    <a class="primary-button" href="{{ prefix }}{{ session.id }}/download">下载提交 zip</a>
+    {% if is_teacher %}
+    <a class="secondary-button" href="/teacher/report/{{ session.id }}">返回报告</a>
+    <a class="secondary-button" href="/teacher/debug/{{ session.id }}">后台证据</a>
+    {% else %}
+    <a class="secondary-button" href="/student/submissions/{{ session.id }}/done">返回提交状态</a>
+    {% endif %}
+  </div>
+</section>
+
+<section class="section">
+  <div class="file-viewer">
+    {% for item in files %}
+    <details class="file-panel" open>
+      <summary>
+        <strong>{{ item.expected }}</strong>
+        <span>{{ item.chars }} 字符</span>
+      </summary>
+      {% if item.missing %}
+      <div class="alert small">该文件未读取到内容。</div>
+      {% else %}
+      <pre class="source-pre"><code>{{ item.numbered_text }}</code></pre>
+      {% endif %}
+    </details>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

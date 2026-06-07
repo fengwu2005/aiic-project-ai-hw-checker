@@ -11,7 +11,7 @@ from cocode_viva.skills.archive_skill import safe_extract_zip
 from cocode_viva.skills.code_analysis_skill import analyze_code
 from cocode_viva.skills.file_reader_skill import read_expected_materials
 from cocode_viva.skills.hidden_test_skill import run_hidden_tests
-from cocode_viva.skills.interaction_skill import analyze_interaction
+from cocode_viva.skills.interaction_skill import analyze_report
 from cocode_viva.skills.question_skill import generate_questions
 from cocode_viva.skills.scoring_skill import build_report
 
@@ -46,10 +46,9 @@ async def analyze_submission(zip_path: Path) -> dict:
 
     code = analyze_code(materials["final_code"]["text"])
     execution = run_hidden_tests(extract_dir)
-    interaction = analyze_interaction(
-        materials["initial_prompt"]["text"],
-        materials["initial_response"]["text"],
-        materials["full_conversation"]["text"],
+    interaction = analyze_report(
+        materials["readme"]["text"],
+        materials["final_code"]["text"],
         materials["student_report"]["text"],
     )
 
@@ -76,7 +75,7 @@ async def analyze_submission(zip_path: Path) -> dict:
     agent = DefenseAgent()
     agent_tool_results = []
     if agent.enabled:
-        llm_question, agent_tool_results = await agent.generate_initial_question(analysis, material_texts)
+        llm_question, agent_tool_results = await agent.generate_first_question(analysis, material_texts)
         if llm_question:
             llm_question["source"] = "api_agent"
             questions = [llm_question]
@@ -99,9 +98,9 @@ async def analyze_submission(zip_path: Path) -> dict:
         "missing": analysis["missing"],
         "line_count": code["line_count"],
         "hidden_tests": f"{execution.get('passed', 0)}/{execution.get('total', 0)}",
-        "interaction_rounds": interaction["rounds"],
+        "report_chars": interaction["student_report_chars"],
         "agent_enabled": agent.enabled,
-        "initial_question_source": questions[0].get("source") if questions else "",
+        "first_question_source": questions[0].get("source") if questions else "",
     })
     write_snapshot(session_id, "analysis", analysis)
     write_snapshot(session_id, "active_questions", {"questions": questions})
@@ -118,7 +117,7 @@ def _answer_is_weak(answer: str) -> bool:
     stripped = answer.strip()
     if len(stripped) < 40:
         return True
-    useful_terms = ["函数", "验收", "代码", "原因", "验证", "修改", "AI", "json", "id", "导入", "异常"]
+    useful_terms = ["函数", "验收", "代码", "原因", "验证", "修改", "报告", "图像", "像素", "滤波", "卷积", "异常"]
     return not any(term.lower() in stripped.lower() for term in useful_terms)
 
 
@@ -128,7 +127,6 @@ def _answer_is_no_knowledge(answer: str) -> bool:
         return True
     no_knowledge_terms = [
         "我不会",
-        "不会",
         "不知道",
         "不清楚",
         "不懂",
@@ -140,6 +138,8 @@ def _answer_is_no_knowledge(answer: str) -> bool:
         "i don't know",
         "idk",
     ]
+    if stripped in {"不会", "不知道", "不清楚", "不懂", "不会回答", "答不上来", "idk"}:
+        return True
     return any(term in stripped for term in no_knowledge_terms)
 
 
@@ -150,9 +150,9 @@ def _build_followup_question(previous_question: dict, answer: str, question_id: 
         "is_followup": True,
         "source": "local_fallback",
         "text": (
-            "请补充一个具体证据：指出相关函数名或文件名，并说明你如何验证它。"
+            "请具体到一个函数：它处理了什么边界？你用什么输入验证？"
         ),
-        "focus": "追问回答是否能落到代码、系统验收和个人贡献证据。",
+        "focus": "追问回答是否能落到函数实现、边界输入和验证证据。",
         "evidence": previous_question.get("evidence", ""),
     }
 
@@ -164,7 +164,7 @@ def _build_no_knowledge_followup(previous_question: dict, question_id: str) -> d
         "is_followup": True,
         "source": "local_fallback",
         "text": (
-            "换个基础问题：任选一个你熟悉的函数，说明它做什么，以及你改过哪里。"
+            "换个基础问题：说出一个固定函数，它做什么，你改过哪里？"
         ),
         "focus": "给学生换维度说明的机会，考察是否能提供任何可验证的个人理解证据。",
         "evidence": previous_question.get("evidence", ""),
@@ -195,7 +195,7 @@ async def _build_next_question(session: dict, previous_question: dict, answer: s
                 "source": "api_agent",
             }
             if decision.get("action") == "end_defense":
-                session["early_finish_reason"] = decision.get("reason") or "AI 助教判断继续追问已无法有效验证学生理解，答辩提前结束。"
+                session["early_finish_reason"] = decision.get("reason") or "系统助教判断继续追问已无法有效验证学生理解，答辩提前结束。"
                 return None, tool_results
             if decision.get("question"):
                 decision["question"]["source"] = "api_agent"

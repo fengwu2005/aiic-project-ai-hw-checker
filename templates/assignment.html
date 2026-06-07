@@ -3,15 +3,15 @@
 <section class="hero">
   <div>
     <p class="eyebrow">固定作业题目</p>
-    <h1>TaskFlow Pro：AI 协作下的任务管理器重构与验收</h1>
+    <h1>ImageLab：PIL 图像变换工具实现与验收</h1>
     <p class="lead">
-      你可以使用 AI 生成初版代码，但最终需要像工程负责人一样审查、补全、重构并解释它。
-      本作业考核的不是“有没有用 AI”，而是你能否把 AI 输出变成可靠、可验收、可解释的程序。
+      使用 Python 和 Pillow/PIL 完成一个可验收的图像处理工具。系统只读取终版代码、README 和报告，
+      并通过隐藏验收与短答辩判断你是否真正掌握实现方法。
     </p>
   </div>
   <div class="hero-panel">
     <strong>最终考核方式</strong>
-    <p>系统会读取你的最终代码、AI 协作记录和报告，并通过隐藏验收与现场答辩评估真实理解和个人贡献。</p>
+    <p>系统会读取终版代码和报告，结合隐藏验收与现场答辩评估真实理解、实现能力和验证意识。</p>
     {% if user and user.role == "student" %}
     <a class="primary-button" href="/student">进入学生端</a>
     {% elif user and user.role == "teacher" %}
@@ -25,13 +25,9 @@
 <section class="section">
   <h2>一、问题情境</h2>
   <p>
-    你正在为课程学习和项目管理开发一个命令行工具。用户希望记录待办任务、设置优先级和截止日期、
-    按标签检索任务，并在任务积累后进行统计、归档和数据迁移。你可以先让 AI 生成一个初版，
-    但 AI 初版往往只覆盖基础增删改查，容易忽略边界输入、数据损坏、导入冲突和可验收接口。
-  </p>
-  <p>
-    本作业要求你基于 AI 初版继续开发一个可靠版本，并完整记录你如何发现 AI 的问题、如何修正、
-    如何保证最终代码能够被外部系统验收。最终答辩时，你需要证明自己理解代码，而不是只提交一个看似能运行的程序。
+    你正在开发一个命令行图像处理工具。用户希望读取图片、保存图片，并对图片进行放大、缩小、旋转、
+    裁剪、反色、模糊、边缘提取和中值滤波等操作。作业重点是稳定的函数接口、像素处理逻辑、
+    参数校验、图像模式转换和可解释的验证方法。
   </p>
 </section>
 
@@ -39,22 +35,22 @@
   <div>
     <h2>二、任务目标</h2>
     <p>
-      实现一个 Python 标准库编写的命令行任务管理器 <code>TaskFlow Pro</code>。
-      程序入口固定为 <code>final/taskflow.py</code>。
+      使用 Python 和 Pillow/PIL 实现命令行图像变换工具 <code>ImageLab</code>。
+      程序入口固定为 <code>final/image_ops.py</code>。
     </p>
     <ul class="check-list">
-      <li>普通用户可以通过命令行管理任务。</li>
+      <li>普通用户可以通过命令行处理图片。</li>
       <li>课程系统可以通过固定函数接口进行隐藏验收。</li>
-      <li>最终代码需要处理非法输入和数据损坏，不能静默吞掉问题。</li>
+      <li>最终代码需要处理非法参数和损坏图片，不能静默吞掉问题。</li>
     </ul>
   </div>
   <div>
     <h2>三、核心交付</h2>
     <ul class="check-list">
-      <li>一个可运行的 <code>final/taskflow.py</code>。</li>
-      <li>完整 AI 协作记录：初始 prompt、AI 初版代码、后续对话。</li>
-      <li>学生报告：说明 AI 的问题、你的关键修改和验收准备。</li>
-      <li>答辩时能解释代码、接口、隐藏验收和 AI 协作过程。</li>
+      <li>一个可运行的 <code>final/image_ops.py</code>。</li>
+      <li><code>README.md</code>：说明运行方式、依赖和功能清单。</li>
+      <li><code>report/report.md</code>：说明实现方法、验证方式、关键贡献和已知不足。</li>
+      <li>答辩时能解释图像函数、像素处理、隐藏验收和报告中的具体证据。</li>
     </ul>
   </div>
 </section>
@@ -63,89 +59,71 @@
   <h2>详细要求</h2>
   <div class="requirement-list">
     <details open>
-      <summary>功能与数据模型</summary>
+      <summary>必做图像功能</summary>
       <div class="requirement-body grid two">
         <div>
-          <h3>任务字段</h3>
+          <h3>基础处理</h3>
           <ul class="check-list">
-            <li><code>id</code>：整数或可转为整数的唯一编号。</li>
-            <li><code>title</code>、<code>description</code>：字符串。</li>
-            <li><code>priority</code>：只能是 <code>high</code>、<code>medium</code>、<code>low</code>。</li>
-            <li><code>deadline</code>：<code>YYYY-MM-DD</code> 字符串，并校验非法日期。</li>
-            <li><code>status</code>：至少支持 <code>todo</code>、<code>doing</code>、<code>done</code>、<code>archived</code>。</li>
-            <li><code>tags</code>：字符串列表。</li>
-            <li><code>created_at</code>、<code>updated_at</code>：时间字符串。</li>
+            <li>读取图片并转换成稳定可处理的图像模式。</li>
+            <li>保存图片到目标路径。</li>
+            <li>按比例放大和缩小图片。</li>
+            <li>按角度旋转图片。</li>
+            <li>按坐标裁剪图片。</li>
           </ul>
         </div>
         <div>
-          <h3>必做功能</h3>
+          <h3>像素与滤波</h3>
           <ul class="check-list">
-            <li>添加、删除、更新状态、完成任务、查看任务。</li>
-            <li>JSON 文件持久化。</li>
-            <li>按状态、优先级、标签、截止日期范围组合筛选。</li>
-            <li>关键词搜索标题和描述。</li>
-            <li>按截止日期、优先级、创建时间排序。</li>
-            <li>批量完成或归档。</li>
-            <li>导入导出 JSON，并处理重复 id、字段缺失和格式错误。</li>
-            <li>统计不同状态数量、逾期任务、高优先级未完成任务和标签分布。</li>
+            <li>反色处理。</li>
+            <li>均值模糊。</li>
+            <li>固定卷积核边缘提取。</li>
+            <li>中值滤波。</li>
+            <li>对非法参数和未知操作给出明确错误。</li>
           </ul>
         </div>
       </div>
     </details>
 
     <details>
-      <summary>固定函数接口与返回值</summary>
+      <summary>固定函数接口</summary>
       <div class="requirement-body">
-        <p><code>final/taskflow.py</code> 必须暴露以下函数名和核心参数。CLI 可以自由设计，但不能破坏这些接口。</p>
+        <p><code>final/image_ops.py</code> 必须暴露以下函数名。CLI 可以自由设计，但不能破坏这些接口。</p>
         <div class="hint-list">
-          <span>add_task(title, description="", priority="medium", deadline=None, tags=None, path=DATA_FILE)</span>
-          <span>list_tasks(status=None, priority=None, tag=None, deadline_from=None, deadline_to=None, keyword=None, sort_by=None, include_archived=False, path=DATA_FILE)</span>
-          <span>update_status(task_id, status, path=DATA_FILE)</span>
-          <span>complete_task(task_id, path=DATA_FILE)</span>
-          <span>delete_task(task_id, path=DATA_FILE)</span>
-          <span>batch_update_status(task_ids, status, path=DATA_FILE)</span>
-          <span>archive_tasks(task_ids, path=DATA_FILE)</span>
-          <span>export_tasks(destination, path=DATA_FILE)</span>
-          <span>import_tasks(source, path=DATA_FILE)</span>
-          <span>task_statistics(today=None, path=DATA_FILE)</span>
+          <span>load_image(path)</span>
+          <span>save_image(image, path)</span>
+          <span>resize_image(image, scale)</span>
+          <span>rotate_image(image, angle)</span>
+          <span>crop_image(image, left, top, right, bottom)</span>
+          <span>invert_image(image)</span>
+          <span>blur_image(image)</span>
+          <span>edge_detect(image)</span>
+          <span>median_filter(image, size=3)</span>
+          <span>transform_image(input_path, output_path, operation, **kwargs)</span>
         </div>
 
-        <h3>返回值格式</h3>
+        <h3>接口约束</h3>
         <ul class="check-list">
-          <li>任务对象必须是 <code>dict</code>，至少包含上述任务字段；字段名必须一致。</li>
-          <li><code>id</code> 为整数或可转为整数；<code>tags</code> 为字符串列表；<code>deadline</code> 为 <code>YYYY-MM-DD</code> 字符串。</li>
-          <li><code>add_task</code>、<code>update_status</code>、<code>complete_task</code> 返回任务对象。</li>
-          <li><code>list_tasks</code> 返回任务对象列表；默认不包含 <code>archived</code>，除非 <code>include_archived=True</code>。</li>
-          <li><code>batch_update_status</code>、<code>archive_tasks</code> 返回被更新的任务对象列表。</li>
-          <li><code>delete_task</code> 删除成功返回 <code>True</code>；任务不存在时抛出异常。</li>
-          <li><code>export_tasks</code> 返回导出的任务数量；<code>import_tasks</code> 返回成功导入的任务数量。</li>
-          <li><code>task_statistics</code> 返回字典，至少包含 <code>total</code>、<code>by_status</code>、<code>overdue</code>、<code>high_priority_open</code>、<code>by_tag</code>。</li>
+          <li>图像处理函数应返回新的 Pillow <code>Image</code> 对象。</li>
+          <li><code>load_image</code> 应返回可稳定处理的图像对象，例如 RGB 图像。</li>
+          <li><code>save_image</code> 必须实际写出目标文件。</li>
+          <li><code>resize_image</code> 的 <code>scale</code> 必须大于 0。</li>
+          <li><code>crop_image</code> 必须校验裁剪框在图像范围内。</li>
+          <li><code>median_filter</code> 的 <code>size</code> 必须为大于 0 的奇数。</li>
+          <li><code>transform_image</code> 至少支持 resize、rotate、crop、invert、blur、edge、median。</li>
         </ul>
       </div>
     </details>
 
     <details>
-      <summary>AI 协作与报告要求</summary>
-      <div class="requirement-body grid two">
-        <div>
-          <h3>AI 协作材料</h3>
-          <ul class="check-list">
-            <li>保留第一次请求 AI 生成代码的提示词。</li>
-            <li>保留 AI 第一次生成的回复和代码。</li>
-            <li>保留后续所有轮次对话，至少 5 轮有效迭代。</li>
-            <li>每轮说明提示目标、AI 回应、发现的问题、验证方式和自己的处理。</li>
-          </ul>
-        </div>
-        <div>
-          <h3>报告内容</h3>
-          <ul class="check-list">
-            <li>项目实现方法和核心数据结构。</li>
-            <li>AI 初版的主要问题。</li>
-            <li>自己的关键贡献和工程取舍。</li>
-            <li>系统验收准备与自查方法。</li>
-            <li>最终反思和已知不足。</li>
-          </ul>
-        </div>
+      <summary>报告要求</summary>
+      <div class="requirement-body">
+        <ul class="check-list">
+          <li>说明项目结构、运行方式和依赖。</li>
+          <li>说明核心图像函数的实现方法，至少覆盖图像模式、裁剪校验、均值模糊、边缘检测和中值滤波。</li>
+          <li>说明你用哪些输入进行自测，预期结果是什么，和隐藏验收可能检查什么对应。</li>
+            <li>说明自己的关键实现、工程取舍和已知不足。</li>
+          <li>报告中的说法应能对应到具体函数、行号、验收项或运行结果。</li>
+        </ul>
       </div>
     </details>
 
@@ -154,15 +132,10 @@
       <div class="requirement-body grid two">
         <div>
           <h3>提交 zip 结构</h3>
-          <pre class="tree"><code>TaskFlow_Submission/
+          <pre class="tree"><code>ImageLab_Submission/
   README.md
   final/
-    taskflow.py
-  ai/
-    initial_prompt.md
-    initial_response.md
-    initial_code.py
-    full_conversation.md
+    image_ops.py
   report/
     report.md</code></pre>
         </div>
@@ -172,10 +145,10 @@
             <li>最终程序功能：25 分</li>
             <li>代码质量与工程结构：15 分</li>
             <li>系统验收与验证：15 分</li>
-            <li>AI 协作过程记录：15 分</li>
+            <li>报告与验证说明：15 分</li>
             <li>现场答辩理解表现：20 分</li>
-            <li>报告与原创性说明：10 分</li>
-            <li>AI 共创扩展 Bonus：最多 +5 分</li>
+            <li>报告完整性与实现说明：10 分</li>
+            <li>自主扩展 Bonus：最多 +5 分</li>
           </ul>
         </div>
       </div>
@@ -185,9 +158,8 @@
       <summary>自主扩展 Bonus</summary>
       <div class="requirement-body">
         <p>
-          在完成全部必做功能之后，可以结合 AI 设计额外功能，例如自然语言添加任务、今日任务推荐、
-          任务模板、Markdown 报表导出、提醒策略、交互式命令行或智能标签建议。只有这些自定义扩展可以作为 bonus，
-          必做功能缺失时 bonus 不用于弥补基础得分。
+          在完成全部必做功能之后，可以设计额外图像功能，例如灰度化、亮度/对比度调整、
+          自定义卷积核、批量处理目录图片、添加水印、直方图统计或多步流水线变换。只有这些自定义扩展可以作为 bonus。
         </p>
       </div>
     </details>
@@ -195,10 +167,10 @@
 </section>
 
 <section class="section callout">
-  <h2>答辩系统如何判断原创性</h2>
+  <h2>答辩系统如何判断掌握情况</h2>
   <p>
-    系统不把“使用 AI”视为扣分项，而是检查学生是否能对 AI 输出进行审查、验证和改造。
-    如果最终代码较完整，但学生无法解释关键函数、系统验收结果或交互迭代原因，系统会降低个人贡献比例判断。
+    系统不要求提交任何外部工具使用记录。它重点检查终版代码是否通过验收、报告是否能解释实现与验证，
+    以及学生在答辩中能否把回答落到具体函数、边界输入、图像概念和报告证据。
   </p>
 </section>
 {% endblock %}

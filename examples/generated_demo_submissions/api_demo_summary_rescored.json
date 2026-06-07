@@ -1,0 +1,70 @@
+[
+  {
+    "student": "陈安然",
+    "id": "5ca4c45bba16",
+    "hidden": "12/12",
+    "materials": {
+      "functionality": 25,
+      "code_quality": 15,
+      "validation": 15,
+      "process": 12,
+      "report": 7
+    },
+    "defense": 15,
+    "validity": "valid",
+    "total": 89,
+    "risk": "需复核",
+    "reviewed": true
+  },
+  {
+    "student": "赵明远",
+    "id": "c3c1627c9ac8",
+    "hidden": "3/12",
+    "materials": {
+      "functionality": 10,
+      "code_quality": 6,
+      "validation": 4,
+      "process": 4,
+      "report": 3
+    },
+    "defense": 9,
+    "validity": "weak",
+    "total": 36,
+    "risk": "高风险",
+    "reviewed": false
+  },
+  {
+    "student": "李博文",
+    "id": "c4d587d6d169",
+    "hidden": "9/12",
+    "materials": {
+      "functionality": 16,
+      "code_quality": 12,
+      "validation": 11,
+      "process": 8,
+      "report": 5
+    },
+    "defense": 15,
+    "validity": "valid",
+    "total": 67,
+    "risk": "高风险",
+    "reviewed": false
+  },
+  {
+    "student": "王嘉宁",
+    "id": "d84980857f1c",
+    "hidden": "9/12",
+    "materials": {
+      "functionality": 16,
+      "code_quality": 9,
+      "validation": 11,
+      "process": 4,
+      "report": 3
+    },
+    "defense": 15,
+    "validity": "valid",
+    "total": 58,
+    "risk": "高风险",
+    "reviewed": false
+  }
+]

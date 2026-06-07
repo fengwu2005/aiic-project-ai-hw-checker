@@ -1,17 +1,12 @@
 from __future__ import annotations
 
-import difflib
 from typing import Any
 
 
 MAX_TOOL_TEXT_CHARS = 6000
 MATERIAL_LABELS = {
     "readme": "README.md",
-    "final_code": "final/taskflow.py",
-    "initial_prompt": "ai/initial_prompt.md",
-    "initial_response": "ai/initial_response.md",
-    "initial_code": "ai/initial_code.py",
-    "full_conversation": "ai/full_conversation.md",
+    "final_code": "final/image_ops.py",
     "student_report": "report/report.md",
 }
 
@@ -41,8 +36,6 @@ def execute_tool_request(request: dict[str, Any], material_texts: dict[str, str]
             result = _read_material(material_texts, args)
         elif tool == "search_material":
             result = _search_material(material_texts, args)
-        elif tool == "compare_initial_final_code":
-            result = _compare_initial_final_code(material_texts, args)
         elif tool == "get_static_analysis":
             result = {
                 "missing": analysis.get("missing", []),
@@ -81,11 +74,7 @@ def _describe_material(key: str) -> str:
     descriptions = {
         "readme": "学生项目说明、运行方法、功能清单和限制",
         "final_code": "学生最终提交代码",
-        "initial_prompt": "第一次请求 AI 生成代码的 prompt",
-        "initial_response": "AI 第一次回复或结果摘要",
-        "initial_code": "AI 第一次生成的原始代码",
-        "full_conversation": "后续所有 AI 协作对话",
-        "student_report": "学生最终报告、实现方法、迭代记录和反思",
+        "student_report": "学生最终报告、实现方法、验证说明和个人理解",
     }
     return descriptions.get(key, key)
 
@@ -131,27 +120,6 @@ def _search_material(material_texts: dict[str, str], args: dict[str, Any]) -> di
         "key": key,
         "query": query,
         "matches": matches,
-    }
-
-
-def _compare_initial_final_code(material_texts: dict[str, str], args: dict[str, Any]) -> dict[str, Any]:
-    max_lines = max(60, min(240, int(args.get("max_lines", 140) or 140)))
-    initial = material_texts.get("initial_code", "").splitlines()
-    final = material_texts.get("final_code", "").splitlines()
-    diff = list(difflib.unified_diff(
-        initial,
-        final,
-        fromfile="ai/initial_code.py",
-        tofile="final/taskflow.py",
-        lineterm="",
-        n=2,
-    ))
-    omitted = max(0, len(diff) - max_lines)
-    return {
-        "diff": _limit("\n".join(diff[:max_lines])),
-        "omitted_lines": omitted,
-        "initial_line_count": len(initial),
-        "final_line_count": len(final),
     }
 
 

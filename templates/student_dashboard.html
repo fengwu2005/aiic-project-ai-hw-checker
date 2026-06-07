@@ -58,6 +58,8 @@
             {% else %}
             <a class="secondary-button" href="/student/submissions/{{ item.id }}/done">查看提交状态</a>
             {% endif %}
+            <a class="secondary-button" href="/student/submissions/{{ item.id }}/files">提交文件</a>
+            <a class="secondary-button" href="/student/submissions/{{ item.id }}/download">下载 zip</a>
           </td>
         </tr>
         {% else %}

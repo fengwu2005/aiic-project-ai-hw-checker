@@ -3,7 +3,7 @@
 <section class="page-head compact-head">
   <p class="eyebrow">教师端</p>
   <h1>班级作业与答辩报告</h1>
-  <p>{{ user.display_name }} 可以查看学生提交、AI 评分参考和后台证据，并审核最终分数。</p>
+  <p>{{ user.display_name }} 可以查看学生提交、系统评分参考和后台证据，并审核最终分数。</p>
 </section>
 
 <section class="section grid two">
@@ -25,7 +25,7 @@
     <ul class="check-list">
       <li>系统报告是评分参考，不替代教师判断。</li>
       <li>教师可查看后台证据、调整最终分数并留下审核意见。</li>
-      <li>学生端不展示报告与后台证据，避免影响答辩公平性。</li>
+      <li>学生端审核后展示学习反馈，但不展示后台证据、风险排序和隐藏验收明细。</li>
     </ul>
   </div>
 </section>
@@ -33,13 +33,18 @@
 <section class="section">
   <div class="card-head">
     <h2>学生提交</h2>
-    <span>{{ submissions|length }} 条</span>
+    <span>{{ submissions|length }} 条 · 按风险优先排序</span>
+  </div>
+  <div class="risk-overview">
+    <div><strong>{{ submissions|selectattr("risk_level", "equalto", "high")|list|length }}</strong><span>高风险</span></div>
+    <div><strong>{{ submissions|selectattr("risk_level", "equalto", "medium")|list|length }}</strong><span>需复核</span></div>
+    <div><strong>{{ submissions|selectattr("reviewed")|list|length }}</strong><span>已审核</span></div>
   </div>
   <div class="table-wrap">
     <table>
       <thead>
         <tr>
-          <th>学生</th><th>班级</th><th>作业</th><th>状态</th><th>AI 分</th><th>最终分</th><th>操作</th>
+          <th>学生</th><th>班级</th><th>作业</th><th>风险</th><th>状态</th><th>系统分</th><th>最终分</th><th>操作</th>
         </tr>
       </thead>
       <tbody>
@@ -48,6 +53,12 @@
           <td>{{ item.student_name }}</td>
           <td>{{ item.class_name }}</td>
           <td>{{ item.assignment_title }}</td>
+          <td>
+            <span class="risk-pill {{ item.risk_level }}">{{ item.risk_label }}</span>
+            {% if item.risk_reasons %}
+            <small class="risk-reasons">{{ item.risk_reasons|join("、") }}</small>
+            {% endif %}
+          </td>
           <td>{{ item.status }}</td>
           <td>{{ item.ai_score if item.ai_score is not none else "-" }}</td>
           <td>{{ item.final_score if item.final_score is not none else "-" }}</td>
@@ -55,13 +66,17 @@
             {% if item.has_report %}
             <a class="secondary-button" href="/teacher/report/{{ item.id }}">报告</a>
             <a class="secondary-button" href="/teacher/debug/{{ item.id }}">证据</a>
+            <a class="secondary-button" href="/teacher/submissions/{{ item.id }}/files">文件</a>
+            <a class="secondary-button" href="/teacher/submissions/{{ item.id }}/download">下载</a>
             {% else %}
             <span class="muted">答辩中</span>
+            <a class="secondary-button" href="/teacher/submissions/{{ item.id }}/files">文件</a>
+            <a class="secondary-button" href="/teacher/submissions/{{ item.id }}/download">下载</a>
             {% endif %}
           </td>
         </tr>
         {% else %}
-        <tr><td colspan="7">暂无学生提交。</td></tr>
+        <tr><td colspan="8">暂无学生提交。</td></tr>
         {% endfor %}
       </tbody>
     </table>

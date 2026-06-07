@@ -1,25 +1,129 @@
 {% extends "base.html" %}
 {% block content %}
+{% set report = session.report %}
+{% set reviewed = session.teacher_review and report %}
 <section class="page-head compact-head">
   <p class="eyebrow">提交完成</p>
-  <h1>作业已进入教师审核</h1>
-  <p>你已完成上传与现场答辩。评分报告和后台证据只对教师开放，教师审核后会形成最终分数。</p>
+  <h1>{{ "教师已完成审核" if reviewed else "作业已进入教师审核" }}</h1>
+  <p>
+    {% if reviewed %}
+    你可以查看教师确认后的最终成绩，以及系统整理出的学习反馈。
+    {% else %}
+    你已完成上传与现场答辩。教师审核后会形成最终分数，并开放面向学生的反馈。
+    {% endif %}
+  </p>
 </section>
 
 <section class="section grid two">
   <div>
     <h2>提交状态</h2>
     <div class="score-list">
-      <div><span>作业</span><strong>{{ session.portal.assignment_title if session.portal else "TaskFlow Pro" }}</strong></div>
+      <div><span>作业</span><strong>{{ session.portal.assignment_title if session.portal else "ImageLab" }}</strong></div>
       <div><span>班级</span><strong>{{ session.portal.class_name if session.portal else "-" }}</strong></div>
       <div><span>状态</span><strong>{{ session.portal.status if session.portal else "pending_review" }}</strong></div>
       <div><span>答辩轮次</span><strong>{{ session.answers|length }}</strong></div>
+      {% if session.teacher_review %}
+      <div><span>最终分数</span><strong>{{ session.teacher_review.final_score }}/100</strong></div>
+      <div><span>教师审核</span><strong>{{ session.teacher_review.teacher_name }}</strong></div>
+      {% endif %}
     </div>
   </div>
   <div>
-    <h2>下一步</h2>
+    <h2>{{ "教师评语" if session.teacher_review else "下一步" }}</h2>
+    {% if session.teacher_review %}
+    <p>{{ session.teacher_review.comment if session.teacher_review.comment else "教师已完成审核，未填写额外评语。" }}</p>
+    <p class="muted">以下反馈用于帮助你复盘作业。后台证据、风险排序和隐藏验收明细仍由教师保留。</p>
+    {% else %}
     <p class="muted">请等待教师审核。若教师需要补充说明，会通过课程渠道联系你。</p>
+    {% endif %}
+    <a class="secondary-button" href="/student/submissions/{{ session.id }}/files">查看提交文件</a>
+    <a class="secondary-button" href="/student/submissions/{{ session.id }}/download">下载提交 zip</a>
     <a class="primary-button" href="/student">返回学生端</a>
   </div>
 </section>
+
+{% if reviewed %}
+<section class="section grid two">
+  <div>
+    <h2>分项参考</h2>
+    <div class="score-list">
+      <div><span>最终程序功能</span><strong>{{ report.material_scores.functionality }}/25</strong></div>
+      <div><span>代码质量</span><strong>{{ report.material_scores.code_quality }}/15</strong></div>
+      <div><span>系统验收与验证</span><strong>{{ report.material_scores.validation }}/15</strong></div>
+      <div><span>报告与验证说明</span><strong>{{ report.material_scores.process }}/15</strong></div>
+      <div><span>现场答辩表现</span><strong>{{ report.defense_score }}/20</strong></div>
+      <div><span>报告完整性</span><strong>{{ report.material_scores["report"] }}/10</strong></div>
+    </div>
+  </div>
+  <div>
+    <h2>系统助教反馈</h2>
+    {% if report.agent_overlay and report.agent_overlay.total_adjustment_reason %}
+    <p>{{ report.agent_overlay.total_adjustment_reason }}</p>
+    {% elif report.cap_note %}
+    <p>{{ report.cap_note }}</p>
+    {% else %}
+    <p>系统根据终版代码、报告和答辩回答整理了下面的优势与改进点。</p>
+    {% endif %}
+    {% if report.agent_overlay and report.agent_overlay.bonus_suggestion %}
+    <div class="callout-inline">{{ report.agent_overlay.bonus_suggestion }}</div>
+    {% endif %}
+  </div>
+</section>
+
+<section class="section grid two">
+  <div>
+    <h2>做得较好的地方</h2>
+    <ul class="check-list">
+      {% for item in report.strengths %}
+      <li>{{ item }}</li>
+      {% else %}
+      <li>暂未识别到特别明确的优势，请优先复盘代码完整性、报告证据和答辩表达。</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div>
+    <h2>需要改进的地方</h2>
+    <ul class="risk-list">
+      {% for item in report.risks %}
+      <li>{{ item }}</li>
+      {% else %}
+      <li>没有明显高风险问题，但仍建议根据教师评语复盘实现和验证方法。</li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+
+<section class="section">
+  <div class="card-head">
+    <h2>答辩反馈</h2>
+    <span>{{ report.defense_detail.raw }}/{{ report.defense_detail.max_raw }} 原始点</span>
+  </div>
+  <div class="answer-list">
+    {% for item in report.per_question %}
+    <article>
+      <span>{{ item.dimension }} · {{ item.score }}/{{ item.max_score }}</span>
+      <h3>{{ item.question }}</h3>
+      <p>{{ item.answer if item.answer else "未回答" }}</p>
+      <div class="score-explain">
+        <strong>{{ item.comment }}</strong>
+        {% if item.evidence_hits %}
+        <ul class="check-list">
+          {% for hit in item.evidence_hits %}
+          <li>{{ hit }}</li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+        {% if item.gaps %}
+        <ul class="risk-list">
+          {% for gap in item.gaps %}
+          <li>{{ gap }}</li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
 {% endblock %}

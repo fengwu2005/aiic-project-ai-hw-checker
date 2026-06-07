@@ -10,8 +10,8 @@ from cocode_viva.skills.agent_tools import execute_tool_requests, material_index
 ASSIGNMENT_BRIEF = """
 固定作业：ImageLab 图像变换工具。
 必做功能：读取图片、保存图片、放大、缩小、旋转、剪切/裁剪、反色、模糊、固定卷积核边缘提取、中值滤波。
-AI 协作材料：第一次 prompt、第一次 AI 回复、AI 初版代码、完整后续对话、最终代码、README、学生报告。
-评分关注：教师隐藏验收、最终代码质量、系统验证证据、AI 协作过程、答辩理解、原创性和个人贡献比例。
+提交材料：README、final/image_ops.py 终版代码、report/report.md 学生报告。
+评分关注：教师隐藏验收、终版代码质量、报告中的实现与验证证据、答辩理解和掌握可信度。
 Bonus：只有学生额外实现的图像功能才可能获得最多 5 分，不得弥补必做功能缺失。
 """.strip()
 
@@ -26,7 +26,7 @@ class DefenseAgent:
     def enabled(self) -> bool:
         return self.client.enabled
 
-    async def generate_initial_question(self, analysis: dict[str, Any], material_texts: dict[str, str]) -> tuple[dict[str, str] | None, list[dict[str, Any]]]:
+    async def generate_first_question(self, analysis: dict[str, Any], material_texts: dict[str, str]) -> tuple[dict[str, str] | None, list[dict[str, Any]]]:
         if not self.enabled:
             return None, []
 
@@ -42,7 +42,7 @@ class DefenseAgent:
                 "请基于静态分析和工具证据只生成第 1 个现场答辩问题。"
                 f"{_single_question_rule()}"
                 f"{_short_question_rule()}"
-                "这个问题应优先验证学生是否理解最终代码与 AI 初版代码的关键差异。"
+                "这个问题应优先验证学生是否能解释终版代码中的关键实现、边界或验证方式。"
                 f"只输出 JSON：{_question_output_schema()}"
             ),
             "analysis": _compact_analysis(analysis),
@@ -121,7 +121,7 @@ class DefenseAgent:
                 "你必须输出合法 JSON。"
                 "action 只能是 ask 或 end_defense。"
                 "答辩目标是公平考核学生真实理解，不是惩罚学生某一道题不会。"
-                "如果学生单轮表示不会、不知道或答不上来，通常应继续 ask：可以降低难度、换一个维度、让学生解释文件/函数/AI协作中的更基础证据。"
+                "如果学生单轮表示不会、不知道或答不上来，通常应继续 ask：可以降低难度、换一个维度、让学生解释文件、函数、报告或验收中的更基础证据。"
                 "只有在已覆盖多个关键维度后，学生仍连续无法提供任何可验证细节，或已达到最大轮次，才应输出 end_defense。"
                 "当仍有补救价值时，输出 ask，并生成一题更公平的追问；可以针对上一轮缺口，也可以切换到尚未验证但更基础的维度。"
                 "当上一轮回答扎实时，才可以换到尚未验证的关键维度。"
@@ -136,7 +136,7 @@ class DefenseAgent:
                 "current_rounds": len(questions),
                 "end_defense_when": [
                     "已达到最大轮次",
-                    "已经至少完成 3 轮答辩，且学生多轮连续无法提供任何文件、函数、验收、报告或 AI 协作细节",
+                    "已经至少完成 3 轮答辩，且学生多轮连续无法提供任何文件、函数、验收、报告或实现细节",
                     "学生明确拒绝继续答辩，或连续重复逃避且换维度后仍没有任何可评分证据",
                 ],
                 "ask_when": [
@@ -175,7 +175,7 @@ class DefenseAgent:
         system = _system_prompt()
         user = json.dumps({
             "assignment": ASSIGNMENT_BRIEF,
-            "task": "请像严谨的计算机课程助教一样，根据材料、工具证据和答辩回答生成最终评分参考。你只负责评分和证据判断，不要给学习建议，不要逐题打分，不要输出示范答案。若答辩回答过短或无效，必须显著降低本人掌握与原创性判断。只输出 JSON，字段包括：total_adjustment_reason, contribution, contribution_level, strengths, risks, basis, bonus_suggestion。",
+            "task": "请像严谨的计算机课程助教一样，根据终版代码、报告、隐藏验收和答辩回答生成最终评分参考。你只负责评分和证据判断，不要给学习建议，不要逐题打分，不要输出示范答案。若答辩回答过短或无效，必须显著降低本人掌握可信度判断。只输出 JSON，字段包括：total_adjustment_reason, contribution, contribution_level, strengths, risks, basis, bonus_suggestion。",
             "analysis": _compact_analysis(analysis),
             "tool_results": tool_results,
             "questions": questions,
@@ -198,7 +198,7 @@ class DefenseAgent:
         user = json.dumps({
             "assignment": ASSIGNMENT_BRIEF,
             "purpose": purpose,
-            "instruction": "你现在不能直接评分。请先选择要调用的本地工具来索取证据。只输出 JSON：{\"tool_requests\":[{\"tool\":\"read_material|search_material|compare_initial_final_code|get_static_analysis|list_materials\",\"args\":{...},\"reason\":\"...\"}]}。建议至少调用 get_static_analysis、compare_initial_final_code、read_material(final_code)、read_material(student_report)、read_material(full_conversation) 或 search_material。",
+            "instruction": "你现在不能直接评分。请先选择要调用的本地工具来索取证据。只输出 JSON：{\"tool_requests\":[{\"tool\":\"read_material|search_material|get_static_analysis|list_materials\",\"args\":{...},\"reason\":\"...\"}]}。建议至少调用 get_static_analysis、read_material(final_code)、read_material(student_report)、read_material(readme) 或 search_material。",
             "available_tools": _available_tools(),
             "material_index": material_index(material_texts, analysis),
             "static_analysis": _compact_analysis(analysis),
@@ -214,8 +214,8 @@ class DefenseAgent:
 def _system_prompt() -> str:
     return (
         "你是专业、严格但公平的计算机课程助教 Agent。"
-        "你必须基于证据判断学生理解程度和 AI 协作质量。"
-        "你不能臆测不存在的代码或对话。"
+        "你必须基于证据判断学生对终版代码和报告的理解程度。"
+        "你不能臆测不存在的代码、报告内容或验收结果。"
         "需要材料细节时，通过指定 JSON 工具请求索取。"
         "输出必须是合法 JSON。"
     )
@@ -233,7 +233,8 @@ def _short_question_rule() -> str:
     return (
         "问题必须短小具体，尽量不超过 60 个中文字符。"
         "只问一个点，不要把多个问题用逗号、顿号或分号串起来。"
-        "避免泛泛而谈，优先问函数、文件、字段、一次 AI 修改或一个验收行为。"
+        "避免泛泛而谈，优先问具体函数、图像边界、输入输出、像素处理、报告证据或一个验收行为。"
+        "不要只问宏观反思；问题应像真实教师现场追问实现方法和为什么这样做。"
     )
 
 
@@ -250,7 +251,6 @@ def _available_tools() -> list[dict[str, str]]:
         {"tool": "list_materials", "args": "{}", "description": "列出可读取的提交材料"},
         {"tool": "read_material", "args": "{\"key\":\"final_code\",\"start_line\":1,\"max_lines\":80}", "description": "按材料 key 和行号读取内容"},
         {"tool": "search_material", "args": "{\"key\":\"student_report\",\"query\":\"关键贡献\"}", "description": "在指定材料中搜索关键词"},
-        {"tool": "compare_initial_final_code", "args": "{\"max_lines\":160}", "description": "比较 AI 初版代码和最终代码差异"},
         {"tool": "get_static_analysis", "args": "{}", "description": "读取本地静态分析和隐藏验收摘要"},
     ]
 
@@ -258,10 +258,9 @@ def _available_tools() -> list[dict[str, str]]:
 def _default_tool_requests() -> list[dict[str, Any]]:
     return [
         {"tool": "get_static_analysis", "args": {}, "reason": "获取结构化静态分析"},
-        {"tool": "compare_initial_final_code", "args": {"max_lines": 180}, "reason": "比较 AI 初版和最终版代码"},
         {"tool": "read_material", "args": {"key": "final_code", "start_line": 1, "max_lines": 160}, "reason": "查看最终代码证据"},
-        {"tool": "read_material", "args": {"key": "full_conversation", "start_line": 1, "max_lines": 140}, "reason": "查看 AI 协作过程"},
-        {"tool": "read_material", "args": {"key": "student_report", "start_line": 1, "max_lines": 120}, "reason": "查看学生报告和反思"},
+        {"tool": "read_material", "args": {"key": "student_report", "start_line": 1, "max_lines": 140}, "reason": "查看学生报告、实现方法和验证说明"},
+        {"tool": "read_material", "args": {"key": "readme", "start_line": 1, "max_lines": 100}, "reason": "查看运行说明和功能清单"},
     ]
 
 
@@ -334,7 +333,7 @@ def _normalize_next_step(raw: Any, question_id: str) -> dict[str, Any] | None:
     if action == "end_defense":
         return {
             "action": "end_defense",
-            "reason": reason or "AI 助教判断继续追问已无法有效验证学生理解。",
+            "reason": reason or "系统助教判断继续追问已无法有效验证学生理解。",
             "question": None,
         }
     question = _normalize_single_question(_first_question_payload(raw), question_id)

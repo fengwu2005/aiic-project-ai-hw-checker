@@ -4,13 +4,15 @@ import shutil
 import uuid
 import argparse
 import socket
+import io
+import zipfile
 
 from aiohttp import web
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from cocode_viva.config import PROJECT_ROOT, STATIC_DIR, TEMPLATE_DIR, UPLOAD_DIR
 from cocode_viva.debug_log import format_events_for_view, list_snapshots, read_events
-from cocode_viva.engine import analyze_submission, finish_defense, load_session, save_session, submit_single_answer
+from cocode_viva.engine import analyze_submission, load_session, save_session, submit_single_answer
 from cocode_viva.portal import (
     attach_submission_context,
     authenticate,
@@ -34,6 +36,12 @@ env = Environment(
 )
 
 AUTH_COOKIE = "cocode_viva_token"
+
+SUBMISSION_FILE_LABELS = {
+    "readme": "README.md",
+    "final_code": "final/image_ops.py",
+    "student_report": "report/report.md",
+}
 
 
 def render(template: str, **context) -> web.Response:
@@ -65,20 +73,63 @@ def require_session_for_student(session: dict, user: dict) -> None:
         raise web.HTTPForbidden(text="不能访问其他学生的答辩会话。")
 
 
+def _line_numbered(text: str) -> str:
+    lines = text.splitlines()
+    if not lines:
+        return "1  "
+    width = len(str(len(lines)))
+    return "\n".join(f"{index:>{width}}  {line}" for index, line in enumerate(lines, start=1))
+
+
+def _submission_files(session: dict) -> list[dict]:
+    material_texts = session.get("material_texts") or {}
+    materials = session.get("analysis", {}).get("materials", {})
+    files = []
+    for key, path in SUBMISSION_FILE_LABELS.items():
+        text = material_texts.get(key, "")
+        meta = materials.get(key, {})
+        files.append({
+            "key": key,
+            "path": meta.get("found") or path,
+            "expected": path,
+            "text": text,
+            "numbered_text": _line_numbered(text),
+            "chars": len(text),
+            "missing": not bool(text),
+        })
+    return files
+
+
+def _submission_zip_bytes(session: dict) -> bytes:
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
+        for item in _submission_files(session):
+            archive.writestr(f"ImageLab_Submission/{item['expected']}", item["text"])
+    return buffer.getvalue()
+
+
+def _download_filename(session: dict) -> str:
+    return f"imagelab_{session.get('id', 'submission')}.zip"
+
+
 async def index(request: web.Request) -> web.Response:
     user = current_user(request)
     raise web.HTTPFound(redirect_for_user(user))
 
 
 async def login_page(request: web.Request) -> web.Response:
-    return render("portal.html", page="login", user=current_user(request), error=None)
+    return render("portal.html", page="login", mode="login", user=current_user(request), error=None)
+
+
+async def register_page(request: web.Request) -> web.Response:
+    return render("portal.html", page="login", mode="register", user=current_user(request), error=None)
 
 
 async def login_submit(request: web.Request) -> web.Response:
     data = await request.post()
     user, error = authenticate(str(data.get("username", "")), str(data.get("password", "")))
     if not user:
-        return render("portal.html", page="login", user=None, error=error)
+        return render("portal.html", page="login", mode="login", user=None, error=error)
     response = web.HTTPFound(redirect_for_user(user))
     response.set_cookie(AUTH_COOKIE, create_login_token(user["id"]), httponly=True, samesite="Lax")
     raise response
@@ -94,7 +145,7 @@ async def register_submit(request: web.Request) -> web.Response:
         str(data.get("class_code", "")),
     )
     if not user:
-        return render("portal.html", page="login", user=None, error=error)
+        return render("portal.html", page="login", mode="register", user=None, error=error)
     response = web.HTTPFound(redirect_for_user(user))
     response.set_cookie(AUTH_COOKIE, create_login_token(user["id"]), httponly=True, samesite="Lax")
     raise response
@@ -133,21 +184,15 @@ async def student_assignment(request: web.Request) -> web.Response:
     return render("assignment.html", page="assignment", user=user, assignment=assignment_obj)
 
 
-async def defense(request: web.Request) -> web.Response:
-    raise web.HTTPFound(redirect_for_user(current_user(request)))
-
-
 async def defense_session(request: web.Request) -> web.Response:
-    user = require_role(request)
+    user = require_role(request, "student")
     session_id = request.match_info["session_id"]
     try:
         session = load_session(session_id)
     except FileNotFoundError:
         raise web.HTTPNotFound(text="答辩会话不存在")
-    if user["role"] == "student":
-        require_session_for_student(session, user)
-        return render("student_defense.html", page="student", user=user, session=session, error=None)
-    return render("defense.html", page="teacher", user=user, session=session, error=None)
+    require_session_for_student(session, user)
+    return render("student_defense.html", page="student", user=user, session=session, error=None)
 
 
 async def upload_submission(request: web.Request) -> web.Response:
@@ -188,15 +233,6 @@ async def upload_submission(request: web.Request) -> web.Response:
             temp_path.unlink()
 
 
-async def submit_defense(request: web.Request) -> web.Response:
-    require_role(request, "teacher")
-    session_id = request.match_info["session_id"]
-    data = await request.post()
-    answers = {key: str(value) for key, value in data.items() if key.startswith("q")}
-    await finish_defense(session_id, answers)
-    raise web.HTTPFound(f"/report/{session_id}")
-
-
 async def submit_answer(request: web.Request) -> web.Response:
     user = require_role(request, "student")
     session_id = request.match_info["session_id"]
@@ -221,6 +257,33 @@ async def student_done(request: web.Request) -> web.Response:
         raise web.HTTPNotFound(text="提交记录不存在")
     require_session_for_student(session, user)
     return render("student_done.html", page="student", user=user, session=session)
+
+
+async def student_submission_files(request: web.Request) -> web.Response:
+    user = require_role(request, "student")
+    session_id = request.match_info["session_id"]
+    try:
+        session = load_session(session_id)
+    except FileNotFoundError:
+        raise web.HTTPNotFound(text="提交记录不存在")
+    require_session_for_student(session, user)
+    return render("submission_files.html", page="student", user=user, session=session, files=_submission_files(session))
+
+
+async def student_download_submission(request: web.Request) -> web.Response:
+    user = require_role(request, "student")
+    session_id = request.match_info["session_id"]
+    try:
+        session = load_session(session_id)
+    except FileNotFoundError:
+        raise web.HTTPNotFound(text="提交记录不存在")
+    require_session_for_student(session, user)
+    data = _submission_zip_bytes(session)
+    return web.Response(
+        body=data,
+        content_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="{_download_filename(session)}"'},
+    )
 
 
 async def report(request: web.Request) -> web.Response:
@@ -278,6 +341,31 @@ async def debug_session(request: web.Request) -> web.Response:
     )
 
 
+async def teacher_submission_files(request: web.Request) -> web.Response:
+    user = require_role(request, "teacher")
+    session_id = request.match_info["session_id"]
+    try:
+        session = load_session(session_id)
+    except FileNotFoundError:
+        raise web.HTTPNotFound(text="提交记录不存在")
+    return render("submission_files.html", page="teacher", user=user, session=session, files=_submission_files(session))
+
+
+async def teacher_download_submission(request: web.Request) -> web.Response:
+    require_role(request, "teacher")
+    session_id = request.match_info["session_id"]
+    try:
+        session = load_session(session_id)
+    except FileNotFoundError:
+        raise web.HTTPNotFound(text="提交记录不存在")
+    data = _submission_zip_bytes(session)
+    return web.Response(
+        body=data,
+        content_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="{_download_filename(session)}"'},
+    )
+
+
 async def download_sample(request: web.Request) -> web.FileResponse:
     sample = PROJECT_ROOT / "examples" / "image_lab_sample_submission.zip"
     return web.FileResponse(sample)
@@ -287,6 +375,7 @@ def create_app() -> web.Application:
     app = web.Application(client_max_size=10 * 1024**2)
     app.router.add_get("/", index)
     app.router.add_get("/login", login_page)
+    app.router.add_get("/register", register_page)
     app.router.add_post("/login", login_submit)
     app.router.add_post("/register", register_submit)
     app.router.add_post("/logout", logout)
@@ -297,19 +386,15 @@ def create_app() -> web.Application:
     app.router.add_get("/student/defense/{session_id}", defense_session)
     app.router.add_post("/student/defense/{session_id}/answer", submit_answer)
     app.router.add_get("/student/submissions/{session_id}/done", student_done)
+    app.router.add_get("/student/submissions/{session_id}/files", student_submission_files)
+    app.router.add_get("/student/submissions/{session_id}/download", student_download_submission)
     app.router.add_get("/teacher", teacher_dashboard)
     app.router.add_get("/teacher/report/{session_id}", report)
     app.router.add_post("/teacher/report/{session_id}/review", review_report)
     app.router.add_get("/teacher/debug/{session_id}", debug_session)
-    app.router.add_get("/defense", defense)
-    app.router.add_get("/defense/{session_id}", defense_session)
-    app.router.add_post("/defense/upload", upload_submission)
-    app.router.add_post("/defense/{session_id}/answer", submit_answer)
-    app.router.add_post("/defense/{session_id}/submit", submit_defense)
-    app.router.add_get("/report/{session_id}", report)
-    app.router.add_get("/debug/{session_id}", debug_session)
+    app.router.add_get("/teacher/submissions/{session_id}/files", teacher_submission_files)
+    app.router.add_get("/teacher/submissions/{session_id}/download", teacher_download_submission)
     app.router.add_get("/examples/image_lab_sample_submission.zip", download_sample)
-    app.router.add_get("/examples/taskflow_sample_submission.zip", download_sample)
     app.router.add_static("/static", STATIC_DIR)
     return app
 
