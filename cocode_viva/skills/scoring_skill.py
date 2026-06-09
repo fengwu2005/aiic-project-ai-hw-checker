@@ -22,6 +22,53 @@ def _has_any(text: str, terms: list[str]) -> bool:
     return any(term.lower() in lowered for term in terms)
 
 
+def _answer_understanding_hits(answer: str) -> dict[str, bool]:
+    return {
+        "principle": _has_any(answer, [
+            "原理", "因为", "所以", "本质", "目的", "作用", "为什么", "为了", "原因",
+            "就是", "相当于", "通过", "用来", "核心", "principle", "because", "so that",
+        ]),
+        "process": _has_any(answer, [
+            "先", "再", "然后", "最后", "步骤", "过程", "流程", "遍历", "计算", "转换",
+            "取", "判断", "处理", "输入", "输出", "结果", "step", "process",
+        ]),
+        "image_concept": _has_any(answer, [
+            "pil", "pillow", "image", "pixel", "rgb", "kernel", "laplacian",
+            "图像", "像素", "通道", "窗口", "卷积", "滤波", "裁剪", "反色", "旋转",
+            "模糊", "边缘", "中值", "尺寸", "坐标", "颜色",
+        ]),
+        "validation": _has_any(answer, [
+            "验证", "测试", "验收", "检查", "对比", "预期", "样例", "输入", "输出",
+            "test", "expected", "assert",
+        ]),
+        "implementation": _has_any(answer, [
+            "函数", "接口", "代码", "实现", "修改", "文件", "image_ops.py",
+            "load_image", "resize_image", "crop_image", "invert_image", "blur_image",
+            "edge_detect", "median_filter", "transform_image",
+        ]),
+    }
+
+
+def _local_answer_relevance(question: dict, answer: str) -> int:
+    text = f"{question.get('text', '')} {question.get('focus', '')} {question.get('dimension', '')}".lower()
+    answer_lower = answer.lower()
+    score = 0
+    topics = [
+        (["验证", "测试", "验收", "判断", "正确"], ["验证", "测试", "验收", "检查", "对比", "预期", "正确", "结果"]),
+        (["原理", "为什么", "原因", "目的"], ["原理", "因为", "所以", "目的", "为了", "作用", "本质"]),
+        (["过程", "步骤", "怎么", "如何"], ["先", "再", "然后", "过程", "步骤", "计算", "处理", "转换", "遍历"]),
+        (["像素", "rgb", "通道", "颜色"], ["像素", "rgb", "通道", "颜色", "亮度"]),
+        (["卷积", "边缘", "核"], ["卷积", "边缘", "kernel", "laplacian", "核"]),
+        (["滤波", "模糊", "中值", "窗口"], ["滤波", "模糊", "中值", "窗口", "邻域", "平均"]),
+        (["裁剪", "坐标", "边界"], ["裁剪", "坐标", "边界", "范围", "越界"]),
+        (["输入", "输出", "结果"], ["输入", "输出", "结果", "返回", "得到"]),
+    ]
+    for question_terms, answer_terms in topics:
+        if any(term in text for term in question_terms) and any(term in answer_lower for term in answer_terms):
+            score += 1
+    return score
+
+
 IMAGE_CORE_FEATURES = [
     "image_io",
     "resize",
@@ -184,39 +231,22 @@ def score_defense(questions: list[dict], answers: dict[str, str]) -> dict:
         evidence_hits = []
         gaps = []
         if not _answer_is_no_knowledge(answer):
-            if len(answer) >= 50:
-                score += 1
-                evidence_hits.append("回答长度足以表达一个完整解释。")
+            hits = _answer_understanding_hits(answer)
+            understanding_count = sum(hits.values())
+            relevance = _local_answer_relevance(question, answer)
+            score = min(5, max(0, understanding_count + min(relevance, 2)))
+            if score >= 4:
+                evidence_hits.append("回答基本答中了当前问题，并体现出理解。")
+            elif score >= 2:
+                evidence_hits.append("回答和当前问题相关，但理解说明还不完整。")
+                gaps.append("需要更直接地回答本题问的核心点。")
             else:
-                gaps.append("回答过短，难以判断是否真的理解。")
-            if _has_any(answer, ["函数", "文件", "验收", "边界", "异常", "原因", "修改", "验证", "测试"]):
-                score += 1
-                evidence_hits.append("提到了函数、验证、边界或修改原因。")
-            else:
-                gaps.append("没有说明函数位置、边界处理或修改原因。")
-            if _has_any(answer, ["pil", "image", "pixel", "rgb", "kernel", "laplacian", "卷积", "滤波", "像素", "裁剪", "反色", "通道", "窗口"]):
-                score += 1
-                evidence_hits.append("提到了图像处理概念，例如像素、RGB、卷积或滤波。")
-            else:
-                gaps.append("没有落到图像处理概念，容易变成泛泛回答。")
-            if _has_any(answer, ["load_image", "resize_image", "crop_image", "invert_image", "blur_image", "edge_detect", "median_filter", "transform_image", "image_ops.py"]):
-                score += 1
-                evidence_hits.append("指出了具体函数或文件。")
-            else:
-                gaps.append("没有指出具体函数或文件，证据定位不足。")
-            if _has_any(answer, ["我认为", "我决定", "我发现", "我实现", "我验证", "报告", "验收", "输入", "输出", "预期"]):
-                score += 1
-                evidence_hits.append("能把个人说明、报告或验证方式接到证据链上。")
-            elif question.get("dimension") in {"报告证据", "验证说明"}:
-                gaps.append("没有说明报告依据、验证方式或个人实现判断。")
-            if len(answer) >= 160 and score >= 3:
-                score = min(score + 1, 5)
-                evidence_hits.append("回答较充分，能支撑进一步判断。")
+                gaps.append("回答没有明显答中当前问题，难以判断是否理解。")
         else:
             gaps.append("学生表示不会或没有提供可评分信息。")
 
         if not gaps and score < 5:
-            gaps.append("回答可用，但还可以补充验证方式或更具体的代码细节。")
+            gaps.append("回答可用；如果能更直接回应本题核心，会更容易判断掌握程度。")
         per_question.append({
             "id": question["id"],
             "dimension": question["dimension"],
@@ -236,7 +266,11 @@ def score_defense(questions: list[dict], answers: dict[str, str]) -> dict:
     defense_score = round(raw / max_raw * 20)
     avg_answer_len = round(mean([len(item["answer"]) for item in per_question]) if per_question else 0)
     unique_answers = len({answer.strip() for answer in non_empty_answers})
-    weak_answers = sum(1 for answer in non_empty_answers if len(answer.strip()) < 40)
+    weak_answers = sum(
+        1
+        for answer in non_empty_answers
+        if len(answer.strip()) < 40 and sum(_answer_understanding_hits(answer).values()) < 2
+    )
     no_knowledge_answers = sum(1 for answer in non_empty_answers if _answer_is_no_knowledge(answer))
     answered_count = len(non_empty_answers)
     validity = "valid"
@@ -250,7 +284,7 @@ def score_defense(questions: list[dict], answers: dict[str, str]) -> dict:
         validity = "invalid"
     elif no_knowledge_answers == 1 or defense_score <= 8 or weak_answers >= max(1, answered_count // 2):
         validity = "weak"
-    elif defense_score <= 14 or (avg_answer_len < 70 and defense_score < 17):
+    elif defense_score <= 14:
         validity = "partial"
     return {
         "score": defense_score,
@@ -268,10 +302,135 @@ def score_defense(questions: list[dict], answers: dict[str, str]) -> dict:
 
 def _question_comment(score: int, evidence_hits: list[str], gaps: list[str]) -> str:
     if score >= 4:
-        return "回答能较好落到代码、图像概念或验证证据。"
+        return "回答能体现对原理、过程或验证方式的真实理解。"
     if score >= 2:
-        return f"回答部分有效；主要缺口：{gaps[0] if gaps else '证据还不够具体。'}"
-    return f"回答证据不足；主要问题：{gaps[0] if gaps else '缺少可验证说明。'}"
+        return f"回答部分有效；主要缺口：{gaps[0] if gaps else '还需要更清楚地解释原理或过程。'}"
+    return f"回答理解证据不足；主要问题：{gaps[0] if gaps else '缺少原理、过程或验证说明。'}"
+
+
+def _validity_from_scores(per_question: list[dict], no_knowledge_answers: int, unique_answers: int, answered_count: int) -> str:
+    raw = sum(int(item.get("score", 0)) for item in per_question)
+    max_raw = max(1, len(per_question) * 5)
+    defense_score = round(raw / max_raw * 20)
+    low_scores = sum(1 for item in per_question if int(item.get("score", 0)) <= 1)
+    partial_scores = sum(1 for item in per_question if int(item.get("score", 0)) <= 2)
+    if (
+        answered_count == 0
+        or no_knowledge_answers >= 2
+        or defense_score <= 3
+        or low_scores >= max(1, answered_count - 1)
+        or unique_answers <= 1 and answered_count >= 3
+    ):
+        return "invalid"
+    if no_knowledge_answers == 1 or defense_score <= 8 or partial_scores >= max(1, answered_count // 2 + 1):
+        return "weak"
+    if defense_score <= 14:
+        return "partial"
+    return "valid"
+
+
+def apply_answer_evaluation(report: dict, evaluation: dict) -> dict:
+    existing_items = report.get("per_question", [])
+    evaluation_items = {
+        str(item.get("id", "")): item
+        for item in evaluation.get("per_question", [])
+        if isinstance(item, dict)
+    }
+    updated_items = []
+    for item in existing_items:
+        judged = evaluation_items.get(str(item.get("id", "")))
+        if not judged:
+            updated_items.append(item)
+            continue
+        score = _clamp(int(judged.get("score", 0)), 0, 5)
+        strengths = [str(text) for text in judged.get("strengths", []) if str(text).strip()]
+        gaps = [str(text) for text in judged.get("gaps", []) if str(text).strip()]
+        verdict = str(judged.get("verdict", "")).strip()
+        updated_items.append({
+            **item,
+            "score": score,
+            "evidence_hits": strengths,
+            "gaps": gaps,
+            "comment": verdict or _question_comment(score, strengths, gaps),
+            "scored_by": "api_agent",
+        })
+
+    raw = sum(int(item.get("score", 0)) for item in updated_items)
+    max_raw = max(1, len(updated_items) * 5)
+    defense_score = round(raw / max_raw * 20)
+    detail = dict(report.get("defense_detail", {}))
+    detail["raw"] = raw
+    detail["max_raw"] = max_raw
+
+    validity = str(evaluation.get("validity", "")).strip()
+    if validity not in {"valid", "partial", "weak", "invalid"}:
+        validity = _validity_from_scores(
+            updated_items,
+            int(detail.get("no_knowledge_answers", 0)),
+            int(detail.get("unique_answers", 0)),
+            int(detail.get("answered_count", 0)),
+        )
+
+    material_total = sum((report.get("material_scores") or {}).values())
+    raw_total = material_total + defense_score
+    total_cap, contribution_cap, cap_note = _defense_caps(validity, int(detail.get("no_knowledge_answers", 0)))
+
+    total = min(raw_total, total_cap, int(report.get("total_cap", 100) or 100))
+    contribution = _clamp(
+        round(15 + defense_score * 2.4 + (report.get("material_scores") or {}).get("process", 0) * 1.2 + (report.get("material_scores") or {}).get("report", 0) * 1.3 + (report.get("material_scores") or {}).get("code_quality", 0) * 0.4),
+        10,
+        contribution_cap,
+    )
+
+    report["per_question"] = updated_items
+    report["defense_score"] = defense_score
+    report["defense_validity"] = validity
+    report["defense_detail"] = detail
+    report["raw_total"] = raw_total
+    report["total_cap"] = min(total_cap, int(report.get("total_cap", 100) or 100))
+    report["total"] = total
+    report["contribution"] = contribution
+    report["contribution_level"] = _contribution_level(validity, contribution)
+    report["answer_evaluation_summary"] = str(evaluation.get("summary", "")).strip()
+    if cap_note:
+        report["cap_note"] = cap_note
+    return report
+
+
+def _defense_caps(validity: str, no_knowledge_answers: int) -> tuple[int, int, str]:
+    if validity == "invalid":
+        return (
+            35 if no_knowledge_answers >= 2 else 42,
+            25,
+            "现场答辩回答没有答中问题或无法证明理解；即使作业包完整，也只能给出很低的本人掌握可信度判断。",
+        )
+    if validity == "weak":
+        return (
+            55,
+            40,
+            "现场答辩回答对问题的理解明显不足，材料证据不能充分转化为本人掌握证据；最终分数和掌握可信度被明显限制。",
+        )
+    if validity == "partial":
+        return (
+            72,
+            60,
+            "现场答辩只部分答中了问题，作业包质量不能完全等同于本人掌握，最终分数受到答辩闸门限制。",
+        )
+    return 100, 95, ""
+
+
+def _contribution_level(validity: str, contribution: int) -> str:
+    if validity == "invalid":
+        return "较低"
+    if validity == "weak":
+        return "偏低"
+    if validity == "partial":
+        return "中等" if contribution >= 55 else "偏低"
+    if contribution >= 75:
+        return "较高"
+    if contribution >= 55:
+        return "中等"
+    return "偏低"
 
 
 def _build_risk_flags(analysis: dict, defense: dict, material_scores: dict) -> list[dict[str, str]]:
@@ -282,11 +441,11 @@ def _build_risk_flags(analysis: dict, defense: dict, material_scores: dict) -> l
     hidden_passed = int(execution.get("passed") or 0)
 
     if defense["validity"] == "invalid":
-        flags.append({"level": "high", "label": "答辩无效", "detail": "学生未能提供足够的代码、图像概念或验证证据。"})
+        flags.append({"level": "high", "label": "答辩无效", "detail": "学生未能说明关键原理、处理过程或验证方式。"})
     elif defense["validity"] == "weak":
-        flags.append({"level": "high", "label": "答辩较弱", "detail": "回答较短或缺少关键证据，无法充分证明本人掌握。"})
+        flags.append({"level": "high", "label": "答辩较弱", "detail": "回答尚未清楚体现对原理、过程或结果判断的掌握。"})
     elif defense["validity"] == "partial":
-        flags.append({"level": "medium", "label": "答辩部分有效", "detail": "能解释部分内容，但证据链仍不完整。"})
+        flags.append({"level": "medium", "label": "答辩部分有效", "detail": "能解释部分内容，但对原理、过程或验证方式的说明还不够完整。"})
 
     if hidden_total and hidden_passed < hidden_total:
         flags.append({"level": "high", "label": "隐藏验收未全过", "detail": f"隐藏验收通过 {hidden_passed}/{hidden_total}。"})
@@ -298,6 +457,19 @@ def _build_risk_flags(analysis: dict, defense: dict, material_scores: dict) -> l
         flags.append({"level": "medium", "label": "报告偏空泛", "detail": "报告长度或具体证据不足。"})
     if material_scores.get("validation", 0) >= 14 and defense["score"] <= 8:
         flags.append({"level": "high", "label": "代码强但答辩弱", "detail": "作业包表现较好，但学生未能解释清楚，需教师重点复核。"})
+    similarity = analysis.get("similarity", {})
+    if similarity.get("risk_level") == "high":
+        flags.append({
+            "level": "high",
+            "label": "代码相似度高",
+            "detail": f"与历史提交最高相似度 {similarity.get('highest_similarity', 0)}，建议教师重点追问相似函数。",
+        })
+    elif similarity.get("risk_level") == "medium":
+        flags.append({
+            "level": "medium",
+            "label": "代码相似需复核",
+            "detail": f"与历史提交最高相似度 {similarity.get('highest_similarity', 0)}，仅作为复核提示，不自动扣分。",
+        })
 
     return flags
 
@@ -405,9 +577,9 @@ def build_report(analysis: dict, questions: list[dict], answers: dict[str, str])
     else:
         risks.append("报告对实现方法或验证方式说明不足，教师需要结合答辩重点复核。")
     if defense_score >= 14:
-        strengths.append("答辩回答能较好连接代码、系统验收和修改原因。")
+        strengths.append("答辩回答能较好说明实现原理、处理过程或验证方式。")
     elif defense_score < 9:
-        risks.append("答辩回答较短或泛化，和最终代码的对应关系不足。")
+        risks.append("答辩回答没有充分说明原理、过程或结果判断，教师需要重点复核掌握情况。")
     if cap_note:
         risks.insert(0, cap_note)
     if execution:
@@ -419,6 +591,18 @@ def build_report(analysis: dict, questions: list[dict], answers: dict[str, str])
             risks.append(f"教师隐藏验收通过 {passed}/{hidden_total}，说明最终图像代码存在接口或行为缺口。")
             if failed_core:
                 risks.append(f"核心失败项涉及：{', '.join(failed_core)}。")
+    similarity = analysis.get("similarity", {})
+    if similarity.get("matches"):
+        top = similarity["matches"][0]
+        function_names = [
+            item.get("function", "")
+            for item in top.get("matched_functions", [])
+            if item.get("function")
+        ][:4]
+        risks.append(
+            f"代码相似度提示：与 {top.get('student_name', '其他提交')} 的历史提交整体相似度 {top.get('overall')}；"
+            f"相似函数包括 {', '.join(function_names) if function_names else '若干结构片段'}。该项仅提示教师复核，不直接计入分数。"
+        )
 
     return {
         "total": total,
@@ -454,4 +638,6 @@ def build_report(analysis: dict, questions: list[dict], answers: dict[str, str])
             "系统不判断学生是否使用外部工具，只判断终版成果和答辩能否证明掌握。",
             "若学生自主实现额外图像功能，教师可结合 README、隐藏验收、报告和答辩证据额外给出最多 5 分 bonus。",
         ],
+        "similarity": analysis.get("similarity", {}),
+        "privacy": analysis.get("privacy", {}),
     }

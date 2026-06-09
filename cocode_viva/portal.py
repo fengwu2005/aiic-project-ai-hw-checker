@@ -146,6 +146,10 @@ def list_submissions(user: dict[str, Any] | None = None) -> list[dict[str, Any]]
         meta = session.get("portal", {})
         if not meta:
             continue
+        if _repair_session_status(session):
+            path.write_text(json.dumps(session, ensure_ascii=False, indent=2), encoding="utf-8")
+        if meta.get("deleted_by_student"):
+            continue
         if user:
             if user["role"] == "student" and meta.get("student_id") != user["id"]:
                 continue
@@ -155,6 +159,35 @@ def list_submissions(user: dict[str, Any] | None = None) -> list[dict[str, Any]]
     if user and user["role"] == "teacher":
         submissions.sort(key=lambda item: (-int(item.get("risk_rank", 0)), item.get("reviewed"), item.get("submitted_at", "")), reverse=False)
     return submissions
+
+
+def list_submission_groups() -> list[dict[str, Any]]:
+    grouped: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    for item in list_submissions():
+        key = (item.get("student_id", ""), item.get("assignment_id", ""))
+        grouped.setdefault(key, []).append(item)
+
+    groups = []
+    for attempts in grouped.values():
+        attempts.sort(key=lambda item: item.get("submitted_at", ""), reverse=True)
+        latest = attempts[0]
+        groups.append({
+            "latest": latest,
+            "history": attempts[1:],
+            "attempt_count": len(attempts),
+            "student_name": latest.get("student_name", "未知学生"),
+            "class_name": latest.get("class_name", "未分班"),
+            "assignment_title": latest.get("assignment_title", "未关联作业"),
+            "risk_level": latest.get("risk_level", "none"),
+            "reviewed": latest.get("reviewed", False),
+        })
+
+    groups.sort(key=lambda group: (
+        group["latest"].get("student_name", ""),
+        group["latest"].get("assignment_title", ""),
+        group["latest"].get("submitted_at", ""),
+    ))
+    return groups
 
 
 def attach_submission_context(session: dict[str, Any], user: dict[str, Any], assignment_id: str) -> dict[str, Any]:
@@ -179,6 +212,10 @@ def mark_submission_report_ready(session: dict[str, Any]) -> dict[str, Any]:
     return session
 
 
+def repair_session_status(session: dict[str, Any]) -> bool:
+    return _repair_session_status(session)
+
+
 def save_teacher_review(session: dict[str, Any], teacher: dict[str, Any], final_score: int, comment: str) -> dict[str, Any]:
     final_score = max(0, min(100, int(final_score)))
     session["teacher_review"] = {
@@ -193,12 +230,16 @@ def save_teacher_review(session: dict[str, Any], teacher: dict[str, Any], final_
 
 
 def _submission_summary(session: dict[str, Any]) -> dict[str, Any]:
+    _repair_session_status(session)
     meta = session.get("portal", {})
     report = session.get("report") or {}
     review = session.get("teacher_review") or {}
     risk_flags = report.get("risk_flags") or []
+    similarity = report.get("similarity") or session.get("analysis", {}).get("similarity", {})
     return {
         "id": session.get("id", ""),
+        "student_id": meta.get("student_id", ""),
+        "assignment_id": meta.get("assignment_id", ""),
         "student_name": meta.get("student_name", "未知学生"),
         "class_name": meta.get("class_name", "未分班"),
         "assignment_title": meta.get("assignment_title", "未关联作业"),
@@ -212,7 +253,44 @@ def _submission_summary(session: dict[str, Any]) -> dict[str, Any]:
         "risk_label": report.get("risk_label", "未生成" if not report else "常规"),
         "risk_level": report.get("risk_level", "none" if not report else "low"),
         "risk_reasons": [str(flag.get("label", "")) for flag in risk_flags[:3] if flag.get("label")],
+        "similarity_label": similarity.get("risk_label", ""),
+        "similarity_score": similarity.get("highest_similarity", 0),
     }
+
+
+def _repair_session_status(session: dict[str, Any]) -> bool:
+    meta = session.setdefault("portal", {})
+    old_status = meta.get("status", "defending")
+    if session.get("teacher_review"):
+        new_status = "reviewed"
+    elif session.get("report"):
+        new_status = "pending_review"
+    elif _looks_finalizing(session):
+        new_status = "finalizing"
+    else:
+        new_status = "defending"
+
+    changed = old_status != new_status
+    if changed:
+        meta["status"] = new_status
+    if new_status == "pending_review" and not meta.get("report_ready_at"):
+        meta["report_ready_at"] = now_iso()
+        changed = True
+    return changed
+
+
+def _looks_finalizing(session: dict[str, Any]) -> bool:
+    answers = session.get("answers") if isinstance(session.get("answers"), dict) else {}
+    questions = session.get("questions") if isinstance(session.get("questions"), list) else []
+    if not answers:
+        return False
+    try:
+        current_index = int(session.get("current_index") or 0)
+        max_rounds = int(session.get("max_rounds") or 6)
+    except (TypeError, ValueError):
+        current_index = 0
+        max_rounds = 6
+    return len(answers) >= max_rounds or (questions and current_index >= len(questions) and len(answers) >= len(questions))
 
 
 def _default_store() -> dict[str, Any]:

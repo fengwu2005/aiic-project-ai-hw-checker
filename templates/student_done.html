@@ -20,7 +20,7 @@
     <div class="score-list">
       <div><span>作业</span><strong>{{ session.portal.assignment_title if session.portal else "ImageLab" }}</strong></div>
       <div><span>班级</span><strong>{{ session.portal.class_name if session.portal else "-" }}</strong></div>
-      <div><span>状态</span><strong>{{ session.portal.status if session.portal else "pending_review" }}</strong></div>
+      <div><span>状态</span><strong>{% if session.portal and session.portal.status == "reviewed" %}已审核{% elif session.portal and session.portal.status == "finalizing" %}生成报告中{% elif session.portal and session.portal.status == "defending" %}答辩中{% else %}待教师审核{% endif %}</strong></div>
       <div><span>答辩轮次</span><strong>{{ session.answers|length }}</strong></div>
       {% if session.teacher_review %}
       <div><span>最终分数</span><strong>{{ session.teacher_review.final_score }}/100</strong></div>
@@ -41,6 +41,28 @@
     <a class="primary-button" href="/student">返回学生端</a>
   </div>
 </section>
+
+{% set dialogue = dialogue_timeline(session) %}
+{% if dialogue %}
+<section class="section">
+  <div class="card-head">
+    <h2>答辩对话记录</h2>
+    <span>{{ dialogue|length }} 条 · 正式 {{ session.answers|length }} 轮</span>
+  </div>
+  <div class="answer-list">
+    {% for item in dialogue %}
+    <article>
+      <span>{{ item.dimension }} · {{ "计入评分" if item.counts_for_score else "澄清，不计入评分" }}</span>
+      <h3>{{ item.question }}</h3>
+      <p><strong>学生：</strong>{{ item.student }}</p>
+      {% if item.assistant %}
+      <p><strong>AI 助教：</strong>{{ item.assistant }}</p>
+      {% endif %}
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
 
 {% if reviewed %}
 <section class="section grid two">
@@ -95,7 +117,7 @@
 
 <section class="section">
   <div class="card-head">
-    <h2>答辩反馈</h2>
+    <h2>答辩理解反馈</h2>
     <span>{{ report.defense_detail.raw }}/{{ report.defense_detail.max_raw }} 原始点</span>
   </div>
   <div class="answer-list">

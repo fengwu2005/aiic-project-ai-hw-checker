@@ -1,62 +1,44 @@
 {% extends "base.html" %}
 {% block content %}
 {% set report = session.report %}
-<section class="page-head">
-  <p class="eyebrow">最终评分参考</p>
-  <h1>ImageLab 作业答辩报告</h1>
-  <p>报告基于提交材料与现场答辩回答生成，定位为助教评分参考，不替代教师最终判断。</p>
+<section class="page-head compact-head">
+  <p class="eyebrow">教师端 · 评分参考</p>
+  <h1>{{ session.portal.student_name if session.portal else "学生" }} · ImageLab</h1>
+  <p>先看风险、分数和审核入口；代码相似度、逐题细节和完整对话已收拢到下方。</p>
 </section>
 
 {% if not report %}
 <section class="section">
-  <div class="alert">该会话还没有提交答辩回答。</div>
+  <div class="alert">该会话还没有生成评分报告。</div>
   <a class="primary-button" href="/teacher">返回教师端</a>
 </section>
 {% else %}
 {% if session.portal %}
 <section class="section compact-meta">
-  <div><span>学生</span><strong>{{ session.portal.student_name }}</strong></div>
   <div><span>班级</span><strong>{{ session.portal.class_name }}</strong></div>
   <div><span>作业</span><strong>{{ session.portal.assignment_title }}</strong></div>
-  <div><span>状态</span><strong>{{ session.portal.status }}</strong></div>
+  <div><span>状态</span><strong>{% if session.portal.status == "pending_review" %}待审核{% elif session.portal.status == "reviewed" %}已审核{% elif session.portal.status == "finalizing" %}生成报告中{% elif session.portal.status == "defending" %}答辩中{% else %}{{ session.portal.status }}{% endif %}</strong></div>
+  <div><span>提交</span><strong>{{ session.portal.submitted_at[:19].replace("T", " ") if session.portal.submitted_at else "-" }}</strong></div>
 </section>
 {% endif %}
 
 <section class="score-hero">
   <div>
-    <span>总分</span>
+    <span>系统参考分</span>
     <strong>{{ report.total }}</strong>
     <small>/ 100</small>
   </div>
   <div>
-    <span>掌握可信度估计</span>
+    <span>掌握可信度</span>
     <strong>{{ report.contribution }}%</strong>
     <small>{{ report.contribution_level }}</small>
   </div>
 </section>
 
-{% if report.risk_flags %}
-<section class="section">
-  <div class="card-head">
-    <h2>风险排序依据</h2>
-    <span>{{ report.risk_label }}</span>
-  </div>
-  <div class="risk-flag-list">
-    {% for flag in report.risk_flags %}
-    <article class="{{ flag.level }}">
-      <strong>{{ flag.label }}</strong>
-      <p>{{ flag.detail }}</p>
-    </article>
-    {% endfor %}
-  </div>
-</section>
-{% endif %}
-
-{% if can_review %}
 <section class="section review-panel">
   <div>
     <h2>教师审核</h2>
-    <p class="muted">系统分数是参考，最终成绩由教师结合报告、后台证据和课程标准确认。</p>
+    <p class="muted">最终成绩由教师确认。系统分数、风险、隐藏验收、查重提示和答辩记录都只是审核依据。</p>
     {% if session.teacher_review %}
     <div class="callout-inline">
       已审核：{{ session.teacher_review.teacher_name }} 给出最终分 {{ session.teacher_review.final_score }}。
@@ -72,56 +54,89 @@
       <textarea name="comment" rows="4" placeholder="说明调整依据，可留空。">{{ session.teacher_review.comment if session.teacher_review else "" }}</textarea>
     </label>
     <button class="primary-button" type="submit">保存教师审核</button>
-    <a class="secondary-button" href="/teacher/submissions/{{ session.id }}/files">查看提交文件</a>
-    <a class="secondary-button" href="/teacher/submissions/{{ session.id }}/download">下载提交 zip</a>
-    <a class="secondary-button" href="/teacher/debug/{{ session.id }}">查看后台证据</a>
+    <a class="secondary-button" href="/teacher/submissions/{{ session.id }}/files">提交文件</a>
+    <a class="secondary-button" href="/teacher/submissions/{{ session.id }}/download">下载 zip</a>
+    <a class="secondary-button" href="/teacher/debug/{{ session.id }}">后台证据</a>
   </form>
 </section>
-{% endif %}
-
-{% if report.cap_note %}
-<section class="section callout">
-  <h2>答辩有效性限制</h2>
-  <p>{{ report.cap_note }}</p>
-  <p class="muted">原始材料分与规则分合计为 {{ report.raw_total }}，由于现场答辩无法充分证明学生本人掌握，最终分数封顶为 {{ report.total_cap }}。</p>
-</section>
-{% endif %}
 
 <section class="section grid two">
   <div>
-    <h2>分项得分</h2>
-    <div class="score-list">
-      <div><span>最终程序功能</span><strong>{{ report.material_scores.functionality }}/25</strong></div>
-      <div><span>代码质量</span><strong>{{ report.material_scores.code_quality }}/15</strong></div>
-      <div><span>系统验收与验证</span><strong>{{ report.material_scores.validation }}/15</strong></div>
-      <div><span>报告与验证说明</span><strong>{{ report.material_scores.process }}/15</strong></div>
-      <div><span>现场答辩有效性</span><strong>{{ report.defense_score }}/20</strong></div>
-      <div><span>报告完整性</span><strong>{{ report.material_scores["report"] }}/10</strong></div>
+    <div class="card-head">
+      <h2>风险复核</h2>
+      <span>{{ report.risk_label }}</span>
     </div>
+    {% if report.risk_flags %}
+    <div class="risk-flag-list compact-list">
+      {% for flag in report.risk_flags %}
+      <article class="{{ flag.level }}">
+        <strong>{{ flag.label }}</strong>
+        <p>{{ flag.detail }}</p>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="muted">暂无显著风险，仍建议结合提交文件和答辩记录复核。</p>
+    {% endif %}
   </div>
   <div>
-    <h2>掌握度判断依据</h2>
-    <ul class="check-list">
-      {% for item in report.basis %}
-      <li>{{ item }}</li>
-      {% endfor %}
-    </ul>
+    <h2>分项得分</h2>
+    <div class="score-list">
+      <div><span>程序功能</span><strong>{{ report.material_scores.functionality }}/25</strong></div>
+      <div><span>代码质量</span><strong>{{ report.material_scores.code_quality }}/15</strong></div>
+      <div><span>隐藏验收</span><strong>{{ report.material_scores.validation }}/15</strong></div>
+      <div><span>报告过程</span><strong>{{ report.material_scores.process }}/15</strong></div>
+      <div><span>现场答辩</span><strong>{{ report.defense_score }}/20</strong></div>
+      <div><span>报告完整</span><strong>{{ report.material_scores["report"] }}/10</strong></div>
+    </div>
   </div>
 </section>
 
-<section class="section">
-  <div class="card-head">
-    <h2>逐题答辩评分解释</h2>
-    <span>{{ report.defense_detail.raw }}/{{ report.defense_detail.max_raw }} 原始点</span>
+{% if report.similarity or report.privacy %}
+<details class="section disclosure-section" {% if report.similarity and report.similarity.matches %}open{% endif %}>
+  <summary>代码相似度与隐私模式</summary>
+  {% if report.similarity %}
+  <div class="card-head inner-head">
+    <h2>代码相似度复核</h2>
+    <span>{{ report.similarity.risk_label }} · 最高 {{ report.similarity.highest_similarity }}</span>
   </div>
+  <p class="muted">{{ report.similarity.note }}</p>
+  <div class="answer-list compact-answer-list">
+    {% for match in report.similarity.matches %}
+    <article>
+      <span>{{ match.student_name }} · 整体相似度 {{ match.overall }}</span>
+      <h3>{{ match.assignment_title }}</h3>
+      {% if match.matched_functions %}
+      <ul class="risk-list">
+        {% for fn in match.matched_functions %}
+        <li>{{ fn.function }} 与 {{ fn.matched_function }} 相似度 {{ fn.score }}</li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p>整体结构高度接近；函数级列表只展示足够复杂的高相似函数，简单包装函数已被过滤以减少误报。</p>
+      {% endif %}
+    </article>
+    {% else %}
+    <article>
+      <span>未发现高相似历史提交</span>
+      <p>当前查重只基于本系统已有提交，结果用于教师复核，不直接扣分。</p>
+    </article>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% if report.privacy %}
+  <div class="callout-inline privacy-inline">{{ report.privacy.label }}：{{ report.privacy.description }}</div>
+  {% endif %}
+</details>
+{% endif %}
+
+<details class="section disclosure-section" open>
+  <summary>逐题答辩理解判断</summary>
   <div class="answer-list">
     {% for item in report.per_question %}
     <article>
       <span>{{ item.dimension }} · {{ item.score }}/{{ item.max_score }}</span>
       <h3>{{ item.question }}</h3>
-      {% if item.evidence %}
-      <div class="evidence-box">证据锚点：{{ item.evidence }}</div>
-      {% endif %}
       <p>{{ item.answer if item.answer else "未回答" }}</p>
       <div class="score-explain">
         <strong>{{ item.comment }}</strong>
@@ -143,42 +158,37 @@
     </article>
     {% endfor %}
   </div>
-</section>
+</details>
 
-<section class="section grid two">
-  <div>
-    <h2>优势证据</h2>
-    <ul class="check-list">
-      {% for item in report.strengths %}
-      <li>{{ item }}</li>
-      {% else %}
-      <li>系统未识别到明显优势证据，需要教师进一步复核。</li>
-      {% endfor %}
-    </ul>
+<details class="section disclosure-section">
+  <summary>系统整理的补充依据</summary>
+  <section class="grid two unframed-grid">
+    <div>
+      <h2>优势证据</h2>
+      <ul class="check-list">
+        {% for item in report.strengths %}
+        <li>{{ item }}</li>
+        {% else %}
+        <li>系统未识别到明显优势证据，需要教师进一步复核。</li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div>
+      <h2>判断依据</h2>
+      <ul class="check-list">
+        {% for item in report.basis %}
+        <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </section>
+  {% if report.agent_overlay %}
+  <div class="callout-inline">
+    {% if report.agent_overlay.total_adjustment_reason %}{{ report.agent_overlay.total_adjustment_reason }}{% endif %}
+    {% if report.agent_overlay.bonus_suggestion %}<br>{{ report.agent_overlay.bonus_suggestion }}{% endif %}
   </div>
-  <div>
-    <h2>风险提示</h2>
-    <ul class="risk-list">
-      {% for item in report.risks %}
-      <li>{{ item }}</li>
-      {% else %}
-      <li>未发现突出风险，教师可结合后台证据进行最终复核。</li>
-      {% endfor %}
-    </ul>
-  </div>
-</section>
-
-{% if report.agent_overlay %}
-<section class="section">
-  <h2>系统助教 Agent 评语</h2>
-  {% if report.agent_overlay.total_adjustment_reason %}
-  <p>{{ report.agent_overlay.total_adjustment_reason }}</p>
   {% endif %}
-  {% if report.agent_overlay.bonus_suggestion %}
-  <div class="callout-inline">{{ report.agent_overlay.bonus_suggestion }}</div>
-  {% endif %}
-</section>
-{% endif %}
+</details>
 
 {% endif %}
 {% endblock %}

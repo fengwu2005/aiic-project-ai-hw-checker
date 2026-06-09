@@ -37,5 +37,35 @@
     <main>
       {% block content %}{% endblock %}
     </main>
+    <script>
+      document.addEventListener("submit", function (event) {
+        var form = event.target;
+        if (!(form instanceof HTMLFormElement) || form.method.toLowerCase() !== "post") {
+          return;
+        }
+        if (form.dataset.confirm && !window.confirm(form.dataset.confirm)) {
+          event.preventDefault();
+          return;
+        }
+        if (!form.checkValidity()) {
+          return;
+        }
+        if (form.dataset.submitting === "true") {
+          event.preventDefault();
+          return;
+        }
+        form.dataset.submitting = "true";
+        var buttons = form.querySelectorAll("button[type='submit'], input[type='submit']");
+        buttons.forEach(function (button) {
+          button.dataset.originalText = button.value || button.textContent;
+          if (button.tagName === "BUTTON") {
+            button.textContent = "提交中...";
+          } else {
+            button.value = "提交中...";
+          }
+          button.disabled = true;
+        });
+      });
+    </script>
   </body>
 </html>

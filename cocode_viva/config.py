@@ -1,3 +1,5 @@
+import json
+import os
 from pathlib import Path
 
 
@@ -17,6 +19,30 @@ EXPECTED_FILES = {
     "final_code": "final/image_ops.py",
     "student_report": "report/report.md",
 }
+
+LOCAL_SETTINGS_PATH = PROJECT_ROOT / "config" / "local_settings.json"
+
+
+def setting(name: str, default: str = "") -> str:
+    value = os.getenv(name)
+    if value is None:
+        value = _local_settings().get(name, default)
+    return str(value).strip()
+
+
+def privacy_mode() -> str:
+    mode = setting("PRIVACY_MODE", "full").lower()
+    return mode if mode in {"full", "balanced", "strict", "offline"} else "full"
+
+
+def _local_settings() -> dict:
+    if not LOCAL_SETTINGS_PATH.exists():
+        return {}
+    try:
+        data = json.loads(LOCAL_SETTINGS_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return data if isinstance(data, dict) else {}
 
 
 for directory in (DATA_DIR, UPLOAD_DIR, SESSION_DIR):

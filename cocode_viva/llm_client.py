@@ -1,44 +1,23 @@
 import json
-import os
-from pathlib import Path
 from typing import Any
 
 import httpx
 
-
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-LOCAL_SETTINGS_PATH = PROJECT_ROOT / "config" / "local_settings.json"
-
-
-def _load_local_settings() -> dict[str, str]:
-    if not LOCAL_SETTINGS_PATH.exists():
-        return {}
-    try:
-        data = json.loads(LOCAL_SETTINGS_PATH.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return {}
-    return data if isinstance(data, dict) else {}
-
-
-def _setting(name: str, default: str = "") -> str:
-    local_settings = _load_local_settings()
-    value = os.getenv(name)
-    if value is None:
-        value = local_settings.get(name, default)
-    return str(value).strip()
+from cocode_viva.config import privacy_mode, setting
 
 
 class LLMClient:
     """Tiny OpenAI-compatible client used only when an API key is configured."""
 
     def __init__(self) -> None:
-        self.api_key = _setting("OPENAI_API_KEY")
-        self.base_url = _setting(
+        self.api_key = setting("OPENAI_API_KEY")
+        self.base_url = setting(
             "OPENAI_BASE_URL",
             "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
         ).rstrip("/")
-        self.model = _setting("OPENAI_MODEL", "qwen3.5-122b-a10b")
-        self.timeout = _safe_float(_setting("OPENAI_TIMEOUT_SECONDS", "45"), 45)
+        self.model = setting("OPENAI_MODEL", "qwen3.5-122b-a10b")
+        self.timeout = _safe_float(setting("OPENAI_TIMEOUT_SECONDS", "45"), 45)
+        self.privacy_mode = privacy_mode()
 
     @property
     def chat_url(self) -> str:
@@ -48,7 +27,7 @@ class LLMClient:
 
     @property
     def enabled(self) -> bool:
-        return bool(self.api_key)
+        return bool(self.api_key) and self.privacy_mode != "offline"
 
     async def chat_json(
         self,

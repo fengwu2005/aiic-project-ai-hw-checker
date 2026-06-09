@@ -2,21 +2,112 @@
 {% block content %}
 {% set current_index = session.current_index or 0 %}
 {% set current_question = session.questions[current_index] if current_index < session.questions|length else None %}
+{% set processing = session.processing %}
+{% set waiting_first_question = session.question_update_pending and current_index == 0 and not session.answers %}
 
 <section class="page-head compact-head">
   <p class="eyebrow">学生端 · 现场答辩</p>
   <h1>{{ session.portal.assignment_title if session.portal else "ImageLab" }}</h1>
-  <p>每题只问一个小点，建议 1 到 2 分钟作答；总答辩控制在约 10 分钟内。</p>
+  <p>每题只问一个小点，建议 1 到 2 分钟作答；没理解题意时可以直接在回答框里追问，澄清不计入正式轮次。</p>
 </section>
 
 {% if error %}
 <div class="alert">{{ error }}</div>
 {% endif %}
+{% if processing %}
+<div class="alert status-alert" id="processing-status">
+  {{ processing.message or "系统已收到提交，正在后台处理。" }} 完成后页面会自动更新。
+</div>
+<script>
+  (function () {
+    var initial = {
+      processing: true,
+      currentIndex: {{ current_index }},
+      questionCount: {{ session.questions|length }},
+      answerCount: {{ session.answers|length }},
+      hasReport: {{ "true" if session.report else "false" }},
+      questionId: {{ (current_question.id if current_question else "")|tojson }}
+    };
+    var statusBox = document.getElementById("processing-status");
+    var checks = 0;
+    var timer = window.setInterval(function () {
+      checks += 1;
+      fetch("/student/defense/{{ session.id }}/status", {headers: {"Accept": "application/json"}})
+        .then(function (response) { return response.json(); })
+        .then(function (state) {
+          if (statusBox) {
+            statusBox.textContent = state.processing
+              ? ((state.processing_message || "系统已收到提交，正在后台处理。") + " 完成后页面会自动更新。")
+              : "处理完成，正在更新页面。";
+          }
+          if (
+            !state.processing ||
+            state.has_report !== initial.hasReport ||
+            state.current_index !== initial.currentIndex ||
+            state.question_count !== initial.questionCount ||
+            state.answer_count !== initial.answerCount ||
+            state.current_question_id !== initial.questionId
+          ) {
+            window.clearInterval(timer);
+            window.location.replace("/student/defense/{{ session.id }}");
+          }
+        })
+        .catch(function () {
+          if (checks >= 20) {
+            window.clearInterval(timer);
+          }
+        });
+    }, 3000);
+  })();
+</script>
+{% elif session.question_update_pending %}
+<div class="alert status-alert" id="question-update-status">
+  {{ session.question_update_message or "AI 助教正在思考第一道答辩问题。" }}
+</div>
+<script>
+  (function () {
+    var initialQuestionId = {{ (current_question.id if current_question else "")|tojson }};
+    var initialQuestionText = {{ (current_question.text if current_question else "")|tojson }};
+    var timer = window.setInterval(function () {
+      fetch("/student/defense/{{ session.id }}/status", {headers: {"Accept": "application/json"}})
+        .then(function (response) { return response.json(); })
+        .then(function (state) {
+          if (!state.question_update_pending && (
+            state.current_question_id !== initialQuestionId ||
+            state.current_question_text !== initialQuestionText ||
+            state.current_question_source === "api_agent" ||
+            state.first_question_fallback_ready
+          )) {
+            window.clearInterval(timer);
+            window.location.replace("/student/defense/{{ session.id }}");
+          }
+          if (!state.question_update_pending) {
+            window.clearInterval(timer);
+            var box = document.getElementById("question-update-status");
+            if (box) {
+              box.textContent = "AI 助教已生成问题，正在更新页面。";
+            }
+          }
+        })
+        .catch(function () {});
+    }, 3000);
+  })();
+</script>
+{% elif session.processing_error %}
+<div class="alert small">{{ session.processing_error }}</div>
+{% endif %}
 
 <section class="section defense-solo">
+  {% if waiting_first_question %}
+  <div class="thinking-panel">
+    <div class="spinner"></div>
+    <h2>AI 助教正在思考</h2>
+    <p>系统正在阅读你的终版代码、README 和报告，生成第一道现场答辩问题。</p>
+  </div>
+  {% else %}
   <div class="progress-strip">
     <span>第 {{ current_index + 1 }} 轮</span>
-    <span>最多 4 轮</span>
+    <span>最多 {{ session.max_rounds or 6 }} 轮</span>
     <span>已回答 {{ session.answers|length }} 题</span>
   </div>
 
@@ -24,32 +115,56 @@
     {% if current_question %}
     <label class="question-card" for="answer">
       <span>{{ current_question.dimension }}</span>
+      {% if current_question.original_text and current_question.original_text != current_question.text %}
+      <small class="previous-question">原问题：{{ current_question.original_text }}</small>
+      {% endif %}
       <strong>{{ current_question.text }}</strong>
       <small>{{ current_question.focus }}</small>
-      <textarea id="answer" name="answer" rows="5" required autofocus placeholder="请结合你的图像代码、报告或验收证据简要回答。"></textarea>
+      {% if current_question.evidence %}
+      <small class="evidence-hint">{{ current_question.evidence }}</small>
+      {% endif %}
+      <textarea id="answer" name="answer" rows="5" required autofocus placeholder="可以正式回答；如果没理解题意，也可以直接写“我没理解，这题是让我解释哪个函数/验证方式吗？”"{% if processing %} disabled{% endif %}></textarea>
     </label>
-    <button class="primary-button wide" type="submit">提交本题回答</button>
+    <button class="primary-button wide" type="submit"{% if processing %} disabled{% endif %}>提交本轮内容</button>
     {% else %}
     <p>答辩已完成，系统正在等待教师审核。</p>
     <a class="primary-button wide" href="/student/submissions/{{ session.id }}/done">查看提交状态</a>
     {% endif %}
   </form>
 
-  {% if session.answers %}
-  <details class="history-box">
-    <summary>已回答问题</summary>
-    <div class="answer-list">
-      {% for question in session.questions %}
-      {% if session.answers.get(question.id) %}
-      <article>
-        <span>{{ question.dimension }}</span>
-        <h3>{{ question.text }}</h3>
-        <p>{{ session.answers.get(question.id) }}</p>
-      </article>
+  {% if current_question %}
+  <div class="defense-tools">
+    <form class="assist-form" method="post" action="/student/defense/{{ session.id }}/supplement" enctype="multipart/form-data">
+      <label for="supplement">补交缺失代码或材料</label>
+      <input id="supplement" type="file" name="supplement" accept=".zip,.py,.md,.txt"{% if processing %} disabled{% endif %}>
+      {% if session.analysis.missing %}
+      <small>当前缺失：{{ session.analysis.missing|join("、") }}。可上传完整 zip，或直接上传 image_ops.py、README.md、report.md。</small>
+      {% else %}
+      <small>如果系统助教要求补充代码，可上传新的完整 zip 或单个代码/报告文件，系统会重新分析并重置答辩。</small>
       {% endif %}
+      <button class="secondary-button wide" type="submit"{% if processing %} disabled{% endif %}>提交补交文件</button>
+    </form>
+  </div>
+  {% endif %}
+
+  {% set dialogue = dialogue_timeline(session) %}
+  {% if dialogue %}
+  <details class="history-box">
+    <summary>答辩对话记录</summary>
+    <div class="answer-list">
+      {% for item in dialogue %}
+      <article>
+        <span>{{ item.dimension }} · {{ "计入评分" if item.counts_for_score else "澄清，不计入评分" }}</span>
+        <h3>{{ item.question }}</h3>
+        <p><strong>学生：</strong>{{ item.student }}</p>
+        {% if item.assistant %}
+        <p><strong>AI 助教：</strong>{{ item.assistant }}</p>
+        {% endif %}
+      </article>
       {% endfor %}
     </div>
   </details>
+  {% endif %}
   {% endif %}
 </section>
 {% endblock %}

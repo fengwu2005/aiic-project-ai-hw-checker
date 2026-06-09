@@ -50,16 +50,35 @@
         {% for item in submissions %}
         <tr>
           <td>{{ item.assignment_title }}</td>
-          <td>{{ item.status }}</td>
+          <td>
+            {% if item.status == "pending_review" %}
+            待教师审核
+            {% elif item.status == "reviewed" %}
+            已审核
+            {% elif item.status == "finalizing" %}
+            生成报告中
+            {% elif item.status == "defending" %}
+            答辩中
+            {% else %}
+            {{ item.status }}
+            {% endif %}
+          </td>
           <td>{{ item.submitted_at[:19].replace("T", " ") if item.submitted_at else "-" }}</td>
           <td>
+            <div class="action-bar">
             {% if item.status == "defending" %}
             <a class="secondary-button" href="/student/defense/{{ item.id }}">继续答辩</a>
+            {% elif item.status == "finalizing" %}
+            <a class="secondary-button" href="/student/defense/{{ item.id }}">查看进度</a>
             {% else %}
             <a class="secondary-button" href="/student/submissions/{{ item.id }}/done">查看提交状态</a>
             {% endif %}
             <a class="secondary-button" href="/student/submissions/{{ item.id }}/files">提交文件</a>
             <a class="secondary-button" href="/student/submissions/{{ item.id }}/download">下载 zip</a>
+            <form method="post" action="/student/submissions/{{ item.id }}/delete" data-confirm="确定删除这次提交记录吗？删除后学生端和教师端列表将不再展示它。">
+              <button class="danger-button" type="submit">删除</button>
+            </form>
+            </div>
           </td>
         </tr>
         {% else %}
