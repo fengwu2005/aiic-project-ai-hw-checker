@@ -1,0 +1,1173 @@
+{
+  "id": "c3c1627c9ac8",
+  "analysis": {
+    "id": "c3c1627c9ac8",
+    "extracted_files": [
+      "ImageLab_Submission/README.md",
+      "ImageLab_Submission/final/image_ops.py",
+      "ImageLab_Submission/report/report.md"
+    ],
+    "materials": {
+      "readme": {
+        "expected": "README.md",
+        "found": "ImageLab_Submission/README.md",
+        "chars": 206,
+        "preview": "# ImageLab 提交说明\n\n程序入口是 `final/image_ops.py`，核心依赖是 Pillow/PIL。\n\n## 运行方式\n\n```bash\npython final/image_ops.py input.png output.png invert\n```\n\n## 功能说明\n\n本提交实现图片读取、保存、缩放、旋转、裁剪、反色、模糊、边缘检测、中值滤波和统一调度。具体完成度以代码和报告为准。\n"
+      },
+      "final_code": {
+        "expected": "final/image_ops.py",
+        "found": "ImageLab_Submission/final/image_ops.py",
+        "chars": 412,
+        "preview": "from PIL import Image\n\n\ndef load_image(path):\n    return Image.open(path)\n\n\ndef save_image(image, path):\n    image.save(path)\n    return path\n\n\ndef resize_image(image, scale):\n    return image.resize((1, 1))\n\n\ndef rotate_image(image, angle):\n    return image\n\n\ndef crop_image(image, left, top, right, bottom):\n    return image\n\n# Missing invert_image, blur_image, edge_detect, median_filter and transform_image.\n"
+      },
+      "student_report": {
+        "expected": "report/report.md",
+        "found": "ImageLab_Submission/report/report.md",
+        "chars": 65,
+        "preview": "# ImageLab 学生报告\n\n我提交了一个初步版本，只完成了读取、保存和一部分缩放函数。很多功能还没有完成，也没有系统测试。\n"
+      }
+    },
+    "missing": [],
+    "code": {
+      "line_count": 13,
+      "functions": [
+        "load_image",
+        "save_image",
+        "resize_image",
+        "rotate_image",
+        "crop_image"
+      ],
+      "function_lines": {
+        "load_image": 4,
+        "save_image": 8,
+        "resize_image": 13,
+        "rotate_image": 17,
+        "crop_image": 21
+      },
+      "classes": [],
+      "imports": [
+        "PIL"
+      ],
+      "syntax_ok": true,
+      "syntax_error": "",
+      "features": {
+        "image_io": true,
+        "cli_interface": false,
+        "resize": true,
+        "rotate": true,
+        "crop": true,
+        "invert": true,
+        "blur": true,
+        "edge_detection": true,
+        "median_filter": true,
+        "pixel_access": false,
+        "parameter_validation": false,
+        "error_handling": false
+      }
+    },
+    "execution": {
+      "cases": [
+        {
+          "name": "import final/image_ops.py",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "required image function API",
+          "ok": false,
+          "detail": "AssertionError('missing functions: invert_image, blur_image, edge_detect, median_filter, transform_image')"
+        },
+        {
+          "name": "load_image and save_image",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "resize enlarge and shrink",
+          "ok": false,
+          "detail": "AssertionError('scale=2 should produce 8x8 image')"
+        },
+        {
+          "name": "rotate_image",
+          "ok": false,
+          "detail": "AssertionError('rotation should move pixels')"
+        },
+        {
+          "name": "crop_image",
+          "ok": false,
+          "detail": "AssertionError('crop should return selected region size')"
+        },
+        {
+          "name": "invert_image",
+          "ok": false,
+          "detail": "AttributeError(\"module 'student_image_ops' has no attribute 'invert_image'\")"
+        },
+        {
+          "name": "blur_image average kernel",
+          "ok": false,
+          "detail": "AttributeError(\"module 'student_image_ops' has no attribute 'blur_image'\")"
+        },
+        {
+          "name": "edge_detect fixed convolution",
+          "ok": false,
+          "detail": "AttributeError(\"module 'student_image_ops' has no attribute 'edge_detect'\")"
+        },
+        {
+          "name": "median_filter",
+          "ok": false,
+          "detail": "AttributeError(\"module 'student_image_ops' has no attribute 'median_filter'\")"
+        },
+        {
+          "name": "transform_image dispatcher",
+          "ok": false,
+          "detail": "AttributeError(\"module 'student_image_ops' has no attribute 'transform_image'\")"
+        },
+        {
+          "name": "parameter validation",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "passed": 3,
+      "total": 12,
+      "pass_rate": 0.25,
+      "status": "partial",
+      "enabled": true,
+      "returncode": 0
+    },
+    "interaction": {
+      "sections": 1,
+      "readme_chars": 206,
+      "final_code_chars": 412,
+      "student_report_chars": 65,
+      "thinking_terms": [
+        "测试",
+        "函数"
+      ],
+      "report_specificity": 2,
+      "mentions_implementation": true,
+      "mentions_validation": true,
+      "mentions_personal_changes": false,
+      "mentions_limitations": false
+    },
+    "similarity": {
+      "enabled": true,
+      "risk_level": "high",
+      "risk_label": "代码相似度高",
+      "highest_similarity": 1.0,
+      "matches": [
+        {
+          "session_id": "061731a36718",
+          "student_name": "陈安然",
+          "assignment_title": "ImageLab：PIL 图像变换作业",
+          "overall": 1.0,
+          "matched_functions": []
+        },
+        {
+          "session_id": "0b8d2d46ccd3",
+          "student_name": "陈安然",
+          "assignment_title": "ImageLab：PIL 图像变换作业",
+          "overall": 1.0,
+          "matched_functions": []
+        },
+        {
+          "session_id": "8b6d185bdbf9",
+          "student_name": "陈安然",
+          "assignment_title": "ImageLab：PIL 图像变换作业",
+          "overall": 1.0,
+          "matched_functions": []
+        },
+        {
+          "session_id": "ab91a99f4392",
+          "student_name": "陈安然",
+          "assignment_title": "ImageLab：PIL 图像变换作业",
+          "overall": 1.0,
+          "matched_functions": []
+        },
+        {
+          "session_id": "f32e2b676159",
+          "student_name": "陈安然",
+          "assignment_title": "ImageLab：PIL 图像变换作业",
+          "overall": 1.0,
+          "matched_functions": []
+        }
+      ],
+      "note": "相似度只作为教师复核风险提示，不直接参与自动扣分。"
+    },
+    "privacy": {
+      "mode": "full",
+      "label": "完整材料模式",
+      "description": "API 可接收完整 README、终版代码和报告，用于生成更贴近代码的答辩问题。"
+    }
+  },
+  "material_texts": {
+    "readme": "# ImageLab 提交说明\n\n程序入口是 `final/image_ops.py`，核心依赖是 Pillow/PIL。\n\n## 运行方式\n\n```bash\npython final/image_ops.py input.png output.png invert\n```\n\n## 功能说明\n\n本提交实现图片读取、保存、缩放、旋转、裁剪、反色、模糊、边缘检测、中值滤波和统一调度。具体完成度以代码和报告为准。\n",
+    "final_code": "from PIL import Image\n\n\ndef load_image(path):\n    return Image.open(path)\n\n\ndef save_image(image, path):\n    image.save(path)\n    return path\n\n\ndef resize_image(image, scale):\n    return image.resize((1, 1))\n\n\ndef rotate_image(image, angle):\n    return image\n\n\ndef crop_image(image, left, top, right, bottom):\n    return image\n\n# Missing invert_image, blur_image, edge_detect, median_filter and transform_image.\n",
+    "student_report": "# ImageLab 学生报告\n\n我提交了一个初步版本，只完成了读取、保存和一部分缩放函数。很多功能还没有完成，也没有系统测试。\n"
+  },
+  "questions": [
+    {
+      "id": "q1",
+      "dimension": "终版代码实现",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "resize_image为何无视scale参数且固定输出1x1？请说明正确尺寸计算逻辑。",
+      "focus": "缩放函数参数处理与尺寸计算",
+      "evidence": "final/image_ops.py第14行硬编码resize((1,1))，验收测试scale=2失败。"
+    },
+    {
+      "id": "q2",
+      "dimension": "图像处理原理",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "反色操作在RGB图像上对每个像素的R、G、B通道应如何计算？",
+      "focus": "反色算法与像素值处理",
+      "evidence": "验收测试invert_image缺失，报告未提及实现细节。"
+    },
+    {
+      "id": "q3",
+      "dimension": "基础API与参数理解",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "crop_image的left、top、right、bottom参数在PIL中分别对应图像的哪条边界？",
+      "focus": "crop函数参数定义与坐标系",
+      "evidence": "final/image_ops.py第21行定义了crop_image但直接返回原图，未使用参数。"
+    },
+    {
+      "id": "q4",
+      "dimension": "换向追问",
+      "is_followup": true,
+      "source": "local_fallback",
+      "text": "换个基础问题：说出一个固定函数，它做什么，你改过哪里？",
+      "focus": "给学生换维度说明的机会，考察是否能提供任何可验证的个人理解证据。",
+      "evidence": "final/image_ops.py第21行定义了crop_image但直接返回原图，未使用参数。"
+    }
+  ],
+  "question_pool": [
+    {
+      "id": "q1",
+      "dimension": "代码理解",
+      "is_followup": false,
+      "source": "local_seed",
+      "text": "请解释 `load_image` 为什么要统一图像模式。",
+      "focus": "考察是否理解图像模式、RGB 转换和后续像素处理的关系。",
+      "evidence": "final/image_ops.py:4 `load_image`"
+    },
+    {
+      "id": "q2",
+      "dimension": "实现方法",
+      "is_followup": false,
+      "source": "local_seed",
+      "text": "`blur_image` 的 3x3 均值是怎么计算的？",
+      "focus": "考察是否能说明窗口、通道平均和边界处理。",
+      "evidence": "final/image_ops.py `blur_image`；隐藏验收 `blur_image average kernel`：失败"
+    },
+    {
+      "id": "q3",
+      "dimension": "边界情况",
+      "is_followup": false,
+      "source": "local_seed",
+      "text": "`crop_image` 如何判断裁剪框非法？为什么要这样做？",
+      "focus": "考察参数校验、坐标边界和异常设计。",
+      "evidence": "final/image_ops.py:21 `crop_image`；隐藏验收 `parameter validation`：通过"
+    },
+    {
+      "id": "q4",
+      "dimension": "报告证据",
+      "is_followup": false,
+      "source": "local_seed",
+      "text": "报告里最关键的实现，对应哪个函数？",
+      "focus": "考察学生能否把报告描述绑定到具体代码证据。",
+      "evidence": "report/report.md 的实现说明；final/image_ops.py 对应函数实现"
+    },
+    {
+      "id": "q5",
+      "dimension": "边界情况",
+      "is_followup": false,
+      "source": "local_seed",
+      "text": "非法缩放比例或裁剪框时，你的代码怎么处理？",
+      "focus": "追问参数校验能力。",
+      "evidence": "隐藏验收 `parameter validation`：通过"
+    }
+  ],
+  "agent_tool_results": [
+    {
+      "tool": "read_material",
+      "ok": true,
+      "result": {
+        "key": "final_code",
+        "path": "final/image_ops.py",
+        "start_line": 1,
+        "end_line": 24,
+        "content": "1: from PIL import Image\n2: \n3: \n4: def load_image(path):\n5:     return Image.open(path)\n6: \n7: \n8: def save_image(image, path):\n9:     image.save(path)\n10:     return path\n11: \n12: \n13: def resize_image(image, scale):\n14:     return image.resize((1, 1))\n15: \n16: \n17: def rotate_image(image, angle):\n18:     return image\n19: \n20: \n21: def crop_image(image, left, top, right, bottom):\n22:     return image\n23: \n24: # Missing invert_image, blur_image, edge_detect, median_filter and transform_image."
+      }
+    },
+    {
+      "tool": "read_material",
+      "ok": true,
+      "result": {
+        "key": "student_report",
+        "path": "report/report.md",
+        "start_line": 1,
+        "end_line": 3,
+        "content": "1: # ImageLab 学生报告\n2: \n3: 我提交了一个初步版本，只完成了读取、保存和一部分缩放函数。很多功能还没有完成，也没有系统测试。"
+      }
+    },
+    {
+      "tool": "read_material",
+      "ok": true,
+      "result": {
+        "key": "readme",
+        "path": "README.md",
+        "start_line": 1,
+        "end_line": 13,
+        "content": "1: # ImageLab 提交说明\n2: \n3: 程序入口是 `final/image_ops.py`，核心依赖是 Pillow/PIL。\n4: \n5: ## 运行方式\n6: \n7: ```bash\n8: python final/image_ops.py input.png output.png invert\n9: ```\n10: \n11: ## 功能说明\n12: \n13: 本提交实现图片读取、保存、缩放、旋转、裁剪、反色、模糊、边缘检测、中值滤波和统一调度。具体完成度以代码和报告为准。"
+      }
+    },
+    {
+      "tool": "get_static_analysis",
+      "ok": true,
+      "result": {
+        "missing": [],
+        "code": {
+          "line_count": 13,
+          "functions": [
+            "load_image",
+            "save_image",
+            "resize_image",
+            "rotate_image",
+            "crop_image"
+          ],
+          "function_lines": {
+            "load_image": 4,
+            "save_image": 8,
+            "resize_image": 13,
+            "rotate_image": 17,
+            "crop_image": 21
+          },
+          "classes": [],
+          "imports": [
+            "PIL"
+          ],
+          "syntax_ok": true,
+          "syntax_error": "",
+          "features": {
+            "image_io": true,
+            "cli_interface": false,
+            "resize": true,
+            "rotate": true,
+            "crop": true,
+            "invert": true,
+            "blur": true,
+            "edge_detection": true,
+            "median_filter": true,
+            "pixel_access": false,
+            "parameter_validation": false,
+            "error_handling": false
+          }
+        },
+        "execution": {
+          "cases": [
+            {
+              "name": "import final/image_ops.py",
+              "ok": true,
+              "detail": ""
+            },
+            {
+              "name": "required image function API",
+              "ok": false,
+              "detail": "AssertionError('missing functions: invert_image, blur_image, edge_detect, median_filter, transform_image')"
+            },
+            {
+              "name": "load_image and save_image",
+              "ok": true,
+              "detail": ""
+            },
+            {
+              "name": "resize enlarge and shrink",
+              "ok": false,
+              "detail": "AssertionError('scale=2 should produce 8x8 image')"
+            },
+            {
+              "name": "rotate_image",
+              "ok": false,
+              "detail": "AssertionError('rotation should move pixels')"
+            },
+            {
+              "name": "crop_image",
+              "ok": false,
+              "detail": "AssertionError('crop should return selected region size')"
+            },
+            {
+              "name": "invert_image",
+              "ok": false,
+              "detail": "AttributeError(\"module 'student_image_ops' has no attribute 'invert_image'\")"
+            },
+            {
+              "name": "blur_image average kernel",
+              "ok": false,
+              "detail": "AttributeError(\"module 'student_image_ops' has no attribute 'blur_image'\")"
+            },
+            {
+              "name": "edge_detect fixed convolution",
+              "ok": false,
+              "detail": "AttributeError(\"module 'student_image_ops' has no attribute 'edge_detect'\")"
+            },
+            {
+              "name": "median_filter",
+              "ok": false,
+              "detail": "AttributeError(\"module 'student_image_ops' has no attribute 'median_filter'\")"
+            },
+            {
+              "name": "transform_image dispatcher",
+              "ok": false,
+              "detail": "AttributeError(\"module 'student_image_ops' has no attribute 'transform_image'\")"
+            },
+            {
+              "name": "parameter validation",
+              "ok": true,
+              "detail": ""
+            }
+          ],
+          "passed": 3,
+          "total": 12,
+          "pass_rate": 0.25,
+          "status": "partial",
+          "enabled": true,
+          "returncode": 0
+        },
+        "interaction": {
+          "sections": 1,
+          "readme_chars": 206,
+          "final_code_chars": 412,
+          "student_report_chars": 65,
+          "thinking_terms": [
+            "测试",
+            "函数",
+            "滤波"
+          ],
+          "report_specificity": 2,
+          "mentions_implementation": true,
+          "mentions_validation": true,
+          "mentions_personal_changes": false,
+          "mentions_limitations": false
+        }
+      }
+    }
+  ],
+  "current_index": 4,
+  "answers": {
+    "q1": "呃，老师，那个 resize((1,1)) 其实是我一开始为了能让代码跑起来随便写的占位符。我当时没弄明白怎么把 scale 参数和原图的宽高结合起来计算，怕报错就直接写死了。正确的尺寸计算逻辑……我确实还没掌握，大概应该是原图宽和高分别乘以 scale 再转成整数吧？但我代码里确实没实现这部分，后面也没来得及改，所以测试才失败的。",
+    "q2": "老师，这个反色功能我还没有实现。我的代码里目前只写了读取、保存和部分缩放。关于具体的计算方法，我大概知道是用255减去当前通道的值，但具体怎么遍历像素和处理数组我还没做，所以细节不太清楚。",
+    "q3": "老师，其实我的crop_image函数还没真正写完，代码里只是直接返回了原图，根本没有用到这四个参数。我对PIL的坐标系不太熟悉，虽然大概知道left和top应该是裁剪框的左上角起点，right和bottom是右下角终点，但具体对应图像的哪条边界我确实没去仔细查过文档，也没有实际实现过，所以这个问题我目前答不上来。",
+    "q4": "呃……其实我大部分函数都没真正写完。能跑通的只有 load_image 和 save_image，就是直接调了库函数读取和保存。关于 crop_image，我在第21行定义了它，但里面直接 return 了原图，因为我不太清楚怎么用传入的坐标和尺寸参数去截取图像，所以参数就没用上。resize 和 rotate 也只留了个空壳，测试都挂了。所以我改过的地方基本就是搭了个函数框架，具体的像素处理逻辑还没实现。"
+  },
+  "report": {
+    "total": 42,
+    "raw_total": 42,
+    "total_cap": 45,
+    "cap_note": "现场答辩回答明显不足，材料证据不能充分转化为本人掌握证据；最终分数和掌握可信度被明显限制。 隐藏验收仅通过 3/12，且失败项涉及核心图像函数；即使答辩能说明思路，也不能替代终版代码的实际完成度。",
+    "material_scores": {
+      "functionality": 10,
+      "code_quality": 6,
+      "validation": 4,
+      "process": 4,
+      "report": 3
+    },
+    "defense_score": 15,
+    "defense_validity": "weak",
+    "per_question": [
+      {
+        "id": "q1",
+        "dimension": "终版代码实现",
+        "question": "resize_image为何无视scale参数且固定输出1x1？请说明正确尺寸计算逻辑。",
+        "evidence": "final/image_ops.py第14行硬编码resize((1,1))，验收测试scale=2失败。",
+        "focus": "缩放函数参数处理与尺寸计算",
+        "answer": "呃，老师，那个 resize((1,1)) 其实是我一开始为了能让代码跑起来随便写的占位符。我当时没弄明白怎么把 scale 参数和原图的宽高结合起来计算，怕报错就直接写死了。正确的尺寸计算逻辑……我确实还没掌握，大概应该是原图宽和高分别乘以 scale 再转成整数吧？但我代码里确实没实现这部分，后面也没来得及改，所以测试才失败的。",
+        "score": 5,
+        "max_score": 5,
+        "evidence_hits": [
+          "回答基本答中了当前问题，并体现出理解。"
+        ],
+        "gaps": [],
+        "comment": "回答能体现对原理、过程或验证方式的真实理解。"
+      },
+      {
+        "id": "q2",
+        "dimension": "图像处理原理",
+        "question": "反色操作在RGB图像上对每个像素的R、G、B通道应如何计算？",
+        "evidence": "验收测试invert_image缺失，报告未提及实现细节。",
+        "focus": "反色算法与像素值处理",
+        "answer": "老师，这个反色功能我还没有实现。我的代码里目前只写了读取、保存和部分缩放。关于具体的计算方法，我大概知道是用255减去当前通道的值，但具体怎么遍历像素和处理数组我还没做，所以细节不太清楚。",
+        "score": 5,
+        "max_score": 5,
+        "evidence_hits": [
+          "回答基本答中了当前问题，并体现出理解。"
+        ],
+        "gaps": [],
+        "comment": "回答能体现对原理、过程或验证方式的真实理解。"
+      },
+      {
+        "id": "q3",
+        "dimension": "基础API与参数理解",
+        "question": "crop_image的left、top、right、bottom参数在PIL中分别对应图像的哪条边界？",
+        "evidence": "final/image_ops.py第21行定义了crop_image但直接返回原图，未使用参数。",
+        "focus": "crop函数参数定义与坐标系",
+        "answer": "老师，其实我的crop_image函数还没真正写完，代码里只是直接返回了原图，根本没有用到这四个参数。我对PIL的坐标系不太熟悉，虽然大概知道left和top应该是裁剪框的左上角起点，right和bottom是右下角终点，但具体对应图像的哪条边界我确实没去仔细查过文档，也没有实际实现过，所以这个问题我目前答不上来。",
+        "score": 0,
+        "max_score": 5,
+        "evidence_hits": [],
+        "gaps": [
+          "学生表示不会或没有提供可评分信息。"
+        ],
+        "comment": "回答理解证据不足；主要问题：学生表示不会或没有提供可评分信息。"
+      },
+      {
+        "id": "q4",
+        "dimension": "换向追问",
+        "question": "换个基础问题：说出一个固定函数，它做什么，你改过哪里？",
+        "evidence": "final/image_ops.py第21行定义了crop_image但直接返回原图，未使用参数。",
+        "focus": "给学生换维度说明的机会，考察是否能提供任何可验证的个人理解证据。",
+        "answer": "呃……其实我大部分函数都没真正写完。能跑通的只有 load_image 和 save_image，就是直接调了库函数读取和保存。关于 crop_image，我在第21行定义了它，但里面直接 return 了原图，因为我不太清楚怎么用传入的坐标和尺寸参数去截取图像，所以参数就没用上。resize 和 rotate 也只留了个空壳，测试都挂了。所以我改过的地方基本就是搭了个函数框架，具体的像素处理逻辑还没实现。",
+        "score": 5,
+        "max_score": 5,
+        "evidence_hits": [
+          "回答基本答中了当前问题，并体现出理解。"
+        ],
+        "gaps": [],
+        "comment": "回答能体现对原理、过程或验证方式的真实理解。"
+      }
+    ],
+    "defense_detail": {
+      "raw": 15,
+      "max_raw": 20,
+      "avg_answer_len": 156,
+      "answered_count": 4,
+      "weak_answers": 0,
+      "no_knowledge_answers": 1,
+      "unique_answers": 4
+    },
+    "contribution": 40,
+    "contribution_level": "偏低",
+    "risk_flags": [
+      {
+        "level": "high",
+        "label": "答辩较弱",
+        "detail": "回答尚未清楚体现对原理、过程或结果判断的掌握。"
+      },
+      {
+        "level": "high",
+        "label": "隐藏验收未全过",
+        "detail": "隐藏验收通过 3/12。"
+      },
+      {
+        "level": "medium",
+        "label": "报告偏空泛",
+        "detail": "报告长度或具体证据不足。"
+      },
+      {
+        "level": "high",
+        "label": "代码相似度高",
+        "detail": "与历史提交最高相似度 1.0，建议教师重点追问相似函数。"
+      }
+    ],
+    "risk_rank": 3,
+    "risk_level": "high",
+    "risk_label": "高风险",
+    "strengths": [
+      "最终代码体现了较完整的图像读取、变换和滤波能力。",
+      "报告能同时说明实现方法和验证方式，可辅助判断学生掌握情况。",
+      "答辩回答能较好说明实现原理、处理过程或验证方式。"
+    ],
+    "risks": [
+      "现场答辩回答明显不足，材料证据不能充分转化为本人掌握证据；最终分数和掌握可信度被明显限制。 隐藏验收仅通过 3/12，且失败项涉及核心图像函数；即使答辩能说明思路，也不能替代终版代码的实际完成度。",
+      "教师隐藏验收通过 3/12，说明最终图像代码存在接口或行为缺口。",
+      "核心失败项涉及：blur, edge, median, dispatcher, api。",
+      "代码相似度提示：与 陈安然 的历史提交整体相似度 1.0；相似函数包括 若干结构片段。该项仅提示教师复核，不直接计入分数。"
+    ],
+    "basis": [
+      "最终代码功能、结构和系统验收表现作为作业结果证据。",
+      "教师隐藏验收结果作为代码真实行为证据。",
+      "学生报告中的实现方法、验证说明和限制说明作为学习过程证据。",
+      "现场答辩回答与终版代码、报告和隐藏验收的一致性作为理解程度证据。",
+      "系统不判断学生是否使用外部工具，只判断终版成果和答辩能否证明掌握。",
+      "若学生自主实现额外图像功能，教师可结合 README、隐藏验收、报告和答辩证据额外给出最多 5 分 bonus。"
+    ],
+    "similarity": {
+      "enabled": true,
+      "risk_level": "high",
+      "risk_label": "代码相似度高",
+      "highest_similarity": 1.0,
+      "matches": [
+        {
+          "session_id": "061731a36718",
+          "student_name": "陈安然",
+          "assignment_title": "ImageLab：PIL 图像变换作业",
+          "overall": 1.0,
+          "matched_functions": []
+        },
+        {
+          "session_id": "0b8d2d46ccd3",
+          "student_name": "陈安然",
+          "assignment_title": "ImageLab：PIL 图像变换作业",
+          "overall": 1.0,
+          "matched_functions": []
+        },
+        {
+          "session_id": "8b6d185bdbf9",
+          "student_name": "陈安然",
+          "assignment_title": "ImageLab：PIL 图像变换作业",
+          "overall": 1.0,
+          "matched_functions": []
+        },
+        {
+          "session_id": "ab91a99f4392",
+          "student_name": "陈安然",
+          "assignment_title": "ImageLab：PIL 图像变换作业",
+          "overall": 1.0,
+          "matched_functions": []
+        },
+        {
+          "session_id": "f32e2b676159",
+          "student_name": "陈安然",
+          "assignment_title": "ImageLab：PIL 图像变换作业",
+          "overall": 1.0,
+          "matched_functions": []
+        }
+      ],
+      "note": "相似度只作为教师复核风险提示，不直接参与自动扣分。"
+    },
+    "privacy": {
+      "mode": "full",
+      "label": "完整材料模式",
+      "description": "API 可接收完整 README、终版代码和报告，用于生成更贴近代码的答辩问题。"
+    }
+  },
+  "agent_enabled": true,
+  "portal": {
+    "student_id": "60581fc8966a7823",
+    "student_name": "赵明远",
+    "class_id": "class-ai-2026",
+    "class_name": "智能方向 2026 春",
+    "assignment_id": "image-lab",
+    "assignment_title": "ImageLab：PIL 图像变换作业",
+    "submitted_at": "2026-06-06T13:50:09.757979+00:00",
+    "status": "reviewed",
+    "report_ready_at": "2026-06-06T13:57:26.621763+00:00"
+  },
+  "last_agent_decision": {
+    "action": "fallback",
+    "reason": "API Agent 未返回可用结构化决策，系统使用本地兜底问题。",
+    "after_question_id": "q3",
+    "source": "local_fallback"
+  },
+  "next_question_tool_results": [
+    {
+      "after_question_id": "q1",
+      "tool_results": [
+        {
+          "tool": "get_static_analysis",
+          "ok": true,
+          "result": {
+            "missing": [],
+            "code": {
+              "line_count": 13,
+              "functions": [
+                "load_image",
+                "save_image",
+                "resize_image",
+                "rotate_image",
+                "crop_image"
+              ],
+              "function_lines": {
+                "load_image": 4,
+                "save_image": 8,
+                "resize_image": 13,
+                "rotate_image": 17,
+                "crop_image": 21
+              },
+              "classes": [],
+              "imports": [
+                "PIL"
+              ],
+              "syntax_ok": true,
+              "syntax_error": "",
+              "features": {
+                "image_io": true,
+                "cli_interface": false,
+                "resize": true,
+                "rotate": true,
+                "crop": true,
+                "invert": true,
+                "blur": true,
+                "edge_detection": true,
+                "median_filter": true,
+                "pixel_access": false,
+                "parameter_validation": false,
+                "error_handling": false
+              }
+            },
+            "execution": {
+              "cases": [
+                {
+                  "name": "import final/image_ops.py",
+                  "ok": true,
+                  "detail": ""
+                },
+                {
+                  "name": "required image function API",
+                  "ok": false,
+                  "detail": "AssertionError('missing functions: invert_image, blur_image, edge_detect, median_filter, transform_image')"
+                },
+                {
+                  "name": "load_image and save_image",
+                  "ok": true,
+                  "detail": ""
+                },
+                {
+                  "name": "resize enlarge and shrink",
+                  "ok": false,
+                  "detail": "AssertionError('scale=2 should produce 8x8 image')"
+                },
+                {
+                  "name": "rotate_image",
+                  "ok": false,
+                  "detail": "AssertionError('rotation should move pixels')"
+                },
+                {
+                  "name": "crop_image",
+                  "ok": false,
+                  "detail": "AssertionError('crop should return selected region size')"
+                },
+                {
+                  "name": "invert_image",
+                  "ok": false,
+                  "detail": "AttributeError(\"module 'student_image_ops' has no attribute 'invert_image'\")"
+                },
+                {
+                  "name": "blur_image average kernel",
+                  "ok": false,
+                  "detail": "AttributeError(\"module 'student_image_ops' has no attribute 'blur_image'\")"
+                },
+                {
+                  "name": "edge_detect fixed convolution",
+                  "ok": false,
+                  "detail": "AttributeError(\"module 'student_image_ops' has no attribute 'edge_detect'\")"
+                },
+                {
+                  "name": "median_filter",
+                  "ok": false,
+                  "detail": "AttributeError(\"module 'student_image_ops' has no attribute 'median_filter'\")"
+                },
+                {
+                  "name": "transform_image dispatcher",
+                  "ok": false,
+                  "detail": "AttributeError(\"module 'student_image_ops' has no attribute 'transform_image'\")"
+                },
+                {
+                  "name": "parameter validation",
+                  "ok": true,
+                  "detail": ""
+                }
+              ],
+              "passed": 3,
+              "total": 12,
+              "pass_rate": 0.25,
+              "status": "partial",
+              "enabled": true,
+              "returncode": 0
+            },
+            "interaction": {
+              "sections": 1,
+              "readme_chars": 206,
+              "final_code_chars": 412,
+              "student_report_chars": 65,
+              "thinking_terms": [
+                "测试",
+                "函数",
+                "滤波"
+              ],
+              "report_specificity": 2,
+              "mentions_implementation": true,
+              "mentions_validation": true,
+              "mentions_personal_changes": false,
+              "mentions_limitations": false
+            }
+          }
+        },
+        {
+          "tool": "read_material",
+          "ok": true,
+          "result": {
+            "key": "final_code",
+            "path": "final/image_ops.py",
+            "start_line": 1,
+            "end_line": 24,
+            "content": "1: from PIL import Image\n2: \n3: \n4: def load_image(path):\n5:     return Image.open(path)\n6: \n7: \n8: def save_image(image, path):\n9:     image.save(path)\n10:     return path\n11: \n12: \n13: def resize_image(image, scale):\n14:     return image.resize((1, 1))\n15: \n16: \n17: def rotate_image(image, angle):\n18:     return image\n19: \n20: \n21: def crop_image(image, left, top, right, bottom):\n22:     return image\n23: \n24: # Missing invert_image, blur_image, edge_detect, median_filter and transform_image."
+          }
+        },
+        {
+          "tool": "read_material",
+          "ok": true,
+          "result": {
+            "key": "student_report",
+            "path": "report/report.md",
+            "start_line": 1,
+            "end_line": 3,
+            "content": "1: # ImageLab 学生报告\n2: \n3: 我提交了一个初步版本，只完成了读取、保存和一部分缩放函数。很多功能还没有完成，也没有系统测试。"
+          }
+        },
+        {
+          "tool": "read_material",
+          "ok": true,
+          "result": {
+            "key": "readme",
+            "path": "README.md",
+            "start_line": 1,
+            "end_line": 13,
+            "content": "1: # ImageLab 提交说明\n2: \n3: 程序入口是 `final/image_ops.py`，核心依赖是 Pillow/PIL。\n4: \n5: ## 运行方式\n6: \n7: ```bash\n8: python final/image_ops.py input.png output.png invert\n9: ```\n10: \n11: ## 功能说明\n12: \n13: 本提交实现图片读取、保存、缩放、旋转、裁剪、反色、模糊、边缘检测、中值滤波和统一调度。具体完成度以代码和报告为准。"
+          }
+        }
+      ]
+    },
+    {
+      "after_question_id": "q2",
+      "tool_results": [
+        {
+          "tool": "read_material",
+          "ok": true,
+          "result": {
+            "key": "final_code",
+            "path": "final/image_ops.py",
+            "start_line": 1,
+            "end_line": 24,
+            "content": "1: from PIL import Image\n2: \n3: \n4: def load_image(path):\n5:     return Image.open(path)\n6: \n7: \n8: def save_image(image, path):\n9:     image.save(path)\n10:     return path\n11: \n12: \n13: def resize_image(image, scale):\n14:     return image.resize((1, 1))\n15: \n16: \n17: def rotate_image(image, angle):\n18:     return image\n19: \n20: \n21: def crop_image(image, left, top, right, bottom):\n22:     return image\n23: \n24: # Missing invert_image, blur_image, edge_detect, median_filter and transform_image."
+          }
+        },
+        {
+          "tool": "read_material",
+          "ok": true,
+          "result": {
+            "key": "student_report",
+            "path": "report/report.md",
+            "start_line": 1,
+            "end_line": 3,
+            "content": "1: # ImageLab 学生报告\n2: \n3: 我提交了一个初步版本，只完成了读取、保存和一部分缩放函数。很多功能还没有完成，也没有系统测试。"
+          }
+        },
+        {
+          "tool": "read_material",
+          "ok": true,
+          "result": {
+            "key": "readme",
+            "path": "README.md",
+            "start_line": 1,
+            "end_line": 13,
+            "content": "1: # ImageLab 提交说明\n2: \n3: 程序入口是 `final/image_ops.py`，核心依赖是 Pillow/PIL。\n4: \n5: ## 运行方式\n6: \n7: ```bash\n8: python final/image_ops.py input.png output.png invert\n9: ```\n10: \n11: ## 功能说明\n12: \n13: 本提交实现图片读取、保存、缩放、旋转、裁剪、反色、模糊、边缘检测、中值滤波和统一调度。具体完成度以代码和报告为准。"
+          }
+        },
+        {
+          "tool": "get_static_analysis",
+          "ok": true,
+          "result": {
+            "missing": [],
+            "code": {
+              "line_count": 13,
+              "functions": [
+                "load_image",
+                "save_image",
+                "resize_image",
+                "rotate_image",
+                "crop_image"
+              ],
+              "function_lines": {
+                "load_image": 4,
+                "save_image": 8,
+                "resize_image": 13,
+                "rotate_image": 17,
+                "crop_image": 21
+              },
+              "classes": [],
+              "imports": [
+                "PIL"
+              ],
+              "syntax_ok": true,
+              "syntax_error": "",
+              "features": {
+                "image_io": true,
+                "cli_interface": false,
+                "resize": true,
+                "rotate": true,
+                "crop": true,
+                "invert": true,
+                "blur": true,
+                "edge_detection": true,
+                "median_filter": true,
+                "pixel_access": false,
+                "parameter_validation": false,
+                "error_handling": false
+              }
+            },
+            "execution": {
+              "cases": [
+                {
+                  "name": "import final/image_ops.py",
+                  "ok": true,
+                  "detail": ""
+                },
+                {
+                  "name": "required image function API",
+                  "ok": false,
+                  "detail": "AssertionError('missing functions: invert_image, blur_image, edge_detect, median_filter, transform_image')"
+                },
+                {
+                  "name": "load_image and save_image",
+                  "ok": true,
+                  "detail": ""
+                },
+                {
+                  "name": "resize enlarge and shrink",
+                  "ok": false,
+                  "detail": "AssertionError('scale=2 should produce 8x8 image')"
+                },
+                {
+                  "name": "rotate_image",
+                  "ok": false,
+                  "detail": "AssertionError('rotation should move pixels')"
+                },
+                {
+                  "name": "crop_image",
+                  "ok": false,
+                  "detail": "AssertionError('crop should return selected region size')"
+                },
+                {
+                  "name": "invert_image",
+                  "ok": false,
+                  "detail": "AttributeError(\"module 'student_image_ops' has no attribute 'invert_image'\")"
+                },
+                {
+                  "name": "blur_image average kernel",
+                  "ok": false,
+                  "detail": "AttributeError(\"module 'student_image_ops' has no attribute 'blur_image'\")"
+                },
+                {
+                  "name": "edge_detect fixed convolution",
+                  "ok": false,
+                  "detail": "AttributeError(\"module 'student_image_ops' has no attribute 'edge_detect'\")"
+                },
+                {
+                  "name": "median_filter",
+                  "ok": false,
+                  "detail": "AttributeError(\"module 'student_image_ops' has no attribute 'median_filter'\")"
+                },
+                {
+                  "name": "transform_image dispatcher",
+                  "ok": false,
+                  "detail": "AttributeError(\"module 'student_image_ops' has no attribute 'transform_image'\")"
+                },
+                {
+                  "name": "parameter validation",
+                  "ok": true,
+                  "detail": ""
+                }
+              ],
+              "passed": 3,
+              "total": 12,
+              "pass_rate": 0.25,
+              "status": "partial",
+              "enabled": true,
+              "returncode": 0
+            },
+            "interaction": {
+              "sections": 1,
+              "readme_chars": 206,
+              "final_code_chars": 412,
+              "student_report_chars": 65,
+              "thinking_terms": [
+                "测试",
+                "函数",
+                "滤波"
+              ],
+              "report_specificity": 2,
+              "mentions_implementation": true,
+              "mentions_validation": true,
+              "mentions_personal_changes": false,
+              "mentions_limitations": false
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "report_agent_tool_results": [
+    {
+      "tool": "read_material",
+      "ok": true,
+      "result": {
+        "key": "final_code",
+        "path": "final/image_ops.py",
+        "start_line": 1,
+        "end_line": 24,
+        "content": "1: from PIL import Image\n2: \n3: \n4: def load_image(path):\n5:     return Image.open(path)\n6: \n7: \n8: def save_image(image, path):\n9:     image.save(path)\n10:     return path\n11: \n12: \n13: def resize_image(image, scale):\n14:     return image.resize((1, 1))\n15: \n16: \n17: def rotate_image(image, angle):\n18:     return image\n19: \n20: \n21: def crop_image(image, left, top, right, bottom):\n22:     return image\n23: \n24: # Missing invert_image, blur_image, edge_detect, median_filter and transform_image."
+      }
+    },
+    {
+      "tool": "read_material",
+      "ok": true,
+      "result": {
+        "key": "student_report",
+        "path": "report/report.md",
+        "start_line": 1,
+        "end_line": 3,
+        "content": "1: # ImageLab 学生报告\n2: \n3: 我提交了一个初步版本，只完成了读取、保存和一部分缩放函数。很多功能还没有完成，也没有系统测试。"
+      }
+    },
+    {
+      "tool": "read_material",
+      "ok": true,
+      "result": {
+        "key": "readme",
+        "path": "README.md",
+        "start_line": 1,
+        "end_line": 13,
+        "content": "1: # ImageLab 提交说明\n2: \n3: 程序入口是 `final/image_ops.py`，核心依赖是 Pillow/PIL。\n4: \n5: ## 运行方式\n6: \n7: ```bash\n8: python final/image_ops.py input.png output.png invert\n9: ```\n10: \n11: ## 功能说明\n12: \n13: 本提交实现图片读取、保存、缩放、旋转、裁剪、反色、模糊、边缘检测、中值滤波和统一调度。具体完成度以代码和报告为准。"
+      }
+    },
+    {
+      "tool": "get_static_analysis",
+      "ok": true,
+      "result": {
+        "missing": [],
+        "code": {
+          "line_count": 13,
+          "functions": [
+            "load_image",
+            "save_image",
+            "resize_image",
+            "rotate_image",
+            "crop_image"
+          ],
+          "function_lines": {
+            "load_image": 4,
+            "save_image": 8,
+            "resize_image": 13,
+            "rotate_image": 17,
+            "crop_image": 21
+          },
+          "classes": [],
+          "imports": [
+            "PIL"
+          ],
+          "syntax_ok": true,
+          "syntax_error": "",
+          "features": {
+            "image_io": true,
+            "cli_interface": false,
+            "resize": true,
+            "rotate": true,
+            "crop": true,
+            "invert": true,
+            "blur": true,
+            "edge_detection": true,
+            "median_filter": true,
+            "pixel_access": false,
+            "parameter_validation": false,
+            "error_handling": false
+          }
+        },
+        "execution": {
+          "cases": [
+            {
+              "name": "import final/image_ops.py",
+              "ok": true,
+              "detail": ""
+            },
+            {
+              "name": "required image function API",
+              "ok": false,
+              "detail": "AssertionError('missing functions: invert_image, blur_image, edge_detect, median_filter, transform_image')"
+            },
+            {
+              "name": "load_image and save_image",
+              "ok": true,
+              "detail": ""
+            },
+            {
+              "name": "resize enlarge and shrink",
+              "ok": false,
+              "detail": "AssertionError('scale=2 should produce 8x8 image')"
+            },
+            {
+              "name": "rotate_image",
+              "ok": false,
+              "detail": "AssertionError('rotation should move pixels')"
+            },
+            {
+              "name": "crop_image",
+              "ok": false,
+              "detail": "AssertionError('crop should return selected region size')"
+            },
+            {
+              "name": "invert_image",
+              "ok": false,
+              "detail": "AttributeError(\"module 'student_image_ops' has no attribute 'invert_image'\")"
+            },
+            {
+              "name": "blur_image average kernel",
+              "ok": false,
+              "detail": "AttributeError(\"module 'student_image_ops' has no attribute 'blur_image'\")"
+            },
+            {
+              "name": "edge_detect fixed convolution",
+              "ok": false,
+              "detail": "AttributeError(\"module 'student_image_ops' has no attribute 'edge_detect'\")"
+            },
+            {
+              "name": "median_filter",
+              "ok": false,
+              "detail": "AttributeError(\"module 'student_image_ops' has no attribute 'median_filter'\")"
+            },
+            {
+              "name": "transform_image dispatcher",
+              "ok": false,
+              "detail": "AttributeError(\"module 'student_image_ops' has no attribute 'transform_image'\")"
+            },
+            {
+              "name": "parameter validation",
+              "ok": true,
+              "detail": ""
+            }
+          ],
+          "passed": 3,
+          "total": 12,
+          "pass_rate": 0.25,
+          "status": "partial",
+          "enabled": true,
+          "returncode": 0
+        },
+        "interaction": {
+          "sections": 1,
+          "readme_chars": 206,
+          "final_code_chars": 412,
+          "student_report_chars": 65,
+          "thinking_terms": [
+            "测试",
+            "函数"
+          ],
+          "report_specificity": 2,
+          "mentions_implementation": true,
+          "mentions_validation": true,
+          "mentions_personal_changes": false,
+          "mentions_limitations": false
+        }
+      }
+    }
+  ],
+  "teacher_review": {
+    "teacher_id": "76ac1c8279ec4423",
+    "teacher_name": "演示教师",
+    "final_score": 36,
+    "comment": "",
+    "reviewed_at": "2026-06-07T06:32:16.489922+00:00"
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "dimension": "代码理解",
+      "is_followup": false,
+      "source": "local_seed",
+      "text": "请解释 `load_image` 为什么要统一图像模式。",
+      "focus": "考察是否理解图像模式、RGB 转换和后续像素处理的关系。",
+      "evidence": "final/image_ops.py:6 `load_image`"
+    },
+    {
+      "id": "q2",
+      "dimension": "实现方法",
+      "is_followup": false,
+      "source": "local_fallback",
+      "text": "`blur_image` 的 3x3 均值是怎么计算的？",
+      "focus": "考察是否能说明窗口、通道平均和边界处理。",
+      "evidence": "final/image_ops.py:35 `blur_image`；隐藏验收 `blur_image average kernel`：失败"
+    },
+    {
+      "id": "q3",
+      "dimension": "深度追问",
+      "is_followup": true,
+      "source": "local_fallback",
+      "text": "请具体到一个函数：它处理了什么边界？你用什么输入验证？",
+      "focus": "追问回答是否能落到函数实现、边界输入和验证证据。",
+      "evidence": "final/image_ops.py:35 `blur_image`；隐藏验收 `blur_image average kernel`：失败"
+    },
+    {
+      "id": "q4",
+      "dimension": "边界情况",
+      "is_followup": false,
+      "source": "local_fallback",
+      "text": "`crop_image` 如何判断裁剪框非法？为什么要这样做？",
+      "focus": "考察参数校验、坐标边界和异常设计。",
+      "evidence": "final/image_ops.py:27 `crop_image`；隐藏验收 `parameter validation`：通过"
+    },
+    {
+      "id": "q5",
+      "dimension": "深度追问",
+      "is_followup": true,
+      "source": "local_fallback",
+      "text": "请具体到一个函数：它处理了什么边界？你用什么输入验证？",
+      "focus": "追问回答是否能落到函数实现、边界输入和验证证据。",
+      "evidence": "final/image_ops.py:27 `crop_image`；隐藏验收 `parameter validation`：通过"
+    },
+    {
+      "id": "q6",
+      "dimension": "报告证据",
+      "is_followup": false,
+      "source": "local_fallback",
+      "text": "报告里最关键的实现，对应哪个函数？",
+      "focus": "考察学生能否把报告描述绑定到具体代码证据。",
+      "evidence": "report/report.md 的实现说明；final/image_ops.py 对应函数实现"
+    }
+  ],
+  "answers": {
+    "q1": "我在 final/image_ops.py 里实现了 resize 和 rotate，主要用 PIL 的 Image.resize 与 rotate。验证时用不同尺寸图片检查输出尺寸，并在报告里记录了通过情况。",
+    "q2": "这个问题对应 实现方法，我会看具体函数的输入输出和隐藏验收结果来确认。",
+    "q3": "这个问题对应 深度追问，我会看具体函数的输入输出和隐藏验收结果来确认。",
+    "q4": "这个问题对应 边界情况，我会看具体函数的输入输出和隐藏验收结果来确认。",
+    "q5": "这个问题对应 深度追问，我会看具体函数的输入输出和隐藏验收结果来确认。",
+    "q6": "这个问题对应 报告证据，我会看具体函数的输入输出和隐藏验收结果来确认。"
+  }
+}

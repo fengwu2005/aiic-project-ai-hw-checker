@@ -1,0 +1,13 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "dimension": "材料完整性",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "你的 final/image_ops.py 文件未找到，请提交代码以便我询问关于 read_image 函数的实现。",
+      "focus": "文件缺失",
+      "evidence": "get_static_analysis 显示 final/image_ops.py not found"
+    }
+  ]
+}

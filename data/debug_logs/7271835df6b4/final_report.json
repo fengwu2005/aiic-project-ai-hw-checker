@@ -1,0 +1,107 @@
+{
+  "total": 42,
+  "raw_total": 80,
+  "total_cap": 42,
+  "cap_note": "现场答辩回答无效，无法验证学生本人掌握程度；即使作业包完整，也只能给出很低的本人掌握可信度判断。",
+  "material_scores": {
+    "functionality": 25,
+    "code_quality": 15,
+    "validation": 15,
+    "process": 15,
+    "report": 10
+  },
+  "defense_score": 0,
+  "defense_validity": "invalid",
+  "per_question": [
+    {
+      "id": "q1",
+      "dimension": "代码实现与边界处理",
+      "question": "blur_image 循环范围设为 range(1, height-1) 会如何影响图像边缘像素的处理？",
+      "evidence": "blur_image 第67行 for y in range(1, height - 1):",
+      "focus": "滤波窗口遍历策略对边缘像素的影响",
+      "answer": "我不会",
+      "score": 0,
+      "max_score": 5,
+      "evidence_hits": [],
+      "gaps": [
+        "学生表示不会或没有提供可评分信息。"
+      ],
+      "comment": "回答证据不足；主要问题：学生表示不会或没有提供可评分信息。"
+    },
+    {
+      "id": "q2",
+      "dimension": "基础代码阅读与参数校验",
+      "question": "resize_image 函数中，如果传入 scale <= 0，代码会执行什么操作？",
+      "evidence": "resize_image 第34-35行 if scale <= 0: raise ValueError(...)",
+      "focus": "缩放比例非法输入的防御性编程处理",
+      "answer": "",
+      "score": 0,
+      "max_score": 5,
+      "evidence_hits": [],
+      "gaps": [
+        "学生表示不会或没有提供可评分信息。"
+      ],
+      "comment": "回答证据不足；主要问题：学生表示不会或没有提供可评分信息。"
+    },
+    {
+      "id": "q3",
+      "dimension": "换向追问",
+      "question": "换个基础问题：说出一个固定函数，它做什么，你改过哪里？",
+      "evidence": "resize_image 第34-35行 if scale <= 0: raise ValueError(...)",
+      "focus": "给学生换维度说明的机会，考察是否能提供任何可验证的个人理解证据。",
+      "answer": "",
+      "score": 0,
+      "max_score": 5,
+      "evidence_hits": [],
+      "gaps": [
+        "学生表示不会或没有提供可评分信息。"
+      ],
+      "comment": "回答证据不足；主要问题：学生表示不会或没有提供可评分信息。"
+    }
+  ],
+  "defense_detail": {
+    "raw": 0,
+    "max_raw": 15,
+    "avg_answer_len": 1,
+    "answered_count": 1,
+    "weak_answers": 1,
+    "no_knowledge_answers": 1,
+    "unique_answers": 1
+  },
+  "contribution": 25,
+  "contribution_level": "较低",
+  "risk_flags": [
+    {
+      "level": "high",
+      "label": "答辩无效",
+      "detail": "学生未能提供足够的代码、图像概念或验证证据。"
+    },
+    {
+      "level": "high",
+      "label": "代码强但答辩弱",
+      "detail": "作业包表现较好，但学生未能解释清楚，需教师重点复核。"
+    }
+  ],
+  "risk_rank": 3,
+  "risk_level": "high",
+  "risk_label": "高风险",
+  "strengths": [
+    "最终代码体现了较完整的图像读取、变换和滤波能力。",
+    "报告能同时说明实现方法和验证方式，可辅助判断学生掌握情况。",
+    "教师隐藏验收通过 12/12，最终图像函数行为与作业接口要求一致。"
+  ],
+  "risks": [
+    "学生多轮仍未提供可验证说明，答辩提前结束。",
+    "现场答辩回答无效，无法验证学生本人掌握程度；即使作业包完整，也只能给出很低的本人掌握可信度判断。",
+    "答辩回答较短或泛化，和最终代码的对应关系不足。"
+  ],
+  "basis": [
+    "最终代码功能、结构和系统验收表现作为作业结果证据。",
+    "教师隐藏验收结果作为代码真实行为证据。",
+    "学生报告中的实现方法、验证说明和限制说明作为学习过程证据。",
+    "现场答辩回答与终版代码、报告和隐藏验收的一致性作为理解程度证据。",
+    "系统不判断学生是否使用外部工具，只判断终版成果和答辩能否证明掌握。",
+    "若学生自主实现额外图像功能，教师可结合 README、隐藏验收、报告和答辩证据额外给出最多 5 分 bonus。"
+  ],
+  "early_finish_reason": "学生多轮仍未提供可验证说明，答辩提前结束。"
+}

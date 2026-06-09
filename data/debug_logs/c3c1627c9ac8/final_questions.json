@@ -1,0 +1,46 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "dimension": "终版代码实现",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "resize_image为何无视scale参数且固定输出1x1？请说明正确尺寸计算逻辑。",
+      "focus": "缩放函数参数处理与尺寸计算",
+      "evidence": "final/image_ops.py第14行硬编码resize((1,1))，验收测试scale=2失败。"
+    },
+    {
+      "id": "q2",
+      "dimension": "图像处理原理",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "反色操作在RGB图像上对每个像素的R、G、B通道应如何计算？",
+      "focus": "反色算法与像素值处理",
+      "evidence": "验收测试invert_image缺失，报告未提及实现细节。"
+    },
+    {
+      "id": "q3",
+      "dimension": "基础API与参数理解",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "crop_image的left、top、right、bottom参数在PIL中分别对应图像的哪条边界？",
+      "focus": "crop函数参数定义与坐标系",
+      "evidence": "final/image_ops.py第21行定义了crop_image但直接返回原图，未使用参数。"
+    },
+    {
+      "id": "q4",
+      "dimension": "换向追问",
+      "is_followup": true,
+      "source": "local_fallback",
+      "text": "换个基础问题：说出一个固定函数，它做什么，你改过哪里？",
+      "focus": "给学生换维度说明的机会，考察是否能提供任何可验证的个人理解证据。",
+      "evidence": "final/image_ops.py第21行定义了crop_image但直接返回原图，未使用参数。"
+    }
+  ],
+  "answers": {
+    "q1": "呃，老师，那个 resize((1,1)) 其实是我一开始为了能让代码跑起来随便写的占位符。我当时没弄明白怎么把 scale 参数和原图的宽高结合起来计算，怕报错就直接写死了。正确的尺寸计算逻辑……我确实还没掌握，大概应该是原图宽和高分别乘以 scale 再转成整数吧？但我代码里确实没实现这部分，后面也没来得及改，所以测试才失败的。",
+    "q2": "老师，这个反色功能我还没有实现。我的代码里目前只写了读取、保存和部分缩放。关于具体的计算方法，我大概知道是用255减去当前通道的值，但具体怎么遍历像素和处理数组我还没做，所以细节不太清楚。",
+    "q3": "老师，其实我的crop_image函数还没真正写完，代码里只是直接返回了原图，根本没有用到这四个参数。我对PIL的坐标系不太熟悉，虽然大概知道left和top应该是裁剪框的左上角起点，right和bottom是右下角终点，但具体对应图像的哪条边界我确实没去仔细查过文档，也没有实际实现过，所以这个问题我目前答不上来。",
+    "q4": "呃……其实我大部分函数都没真正写完。能跑通的只有 load_image 和 save_image，就是直接调了库函数读取和保存。关于 crop_image，我在第21行定义了它，但里面直接 return 了原图，因为我不太清楚怎么用传入的坐标和尺寸参数去截取图像，所以参数就没用上。resize 和 rotate 也只留了个空壳，测试都挂了。所以我改过的地方基本就是搭了个函数框架，具体的像素处理逻辑还没实现。"
+  }
+}

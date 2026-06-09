@@ -1,0 +1,36 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "dimension": "材料完整性",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "你的 final/image_ops.py 文件未找到，请提交代码以便我询问关于 read_image 函数的实现。",
+      "focus": "文件缺失",
+      "evidence": "get_static_analysis 显示 final/image_ops.py not found"
+    },
+    {
+      "id": "q2",
+      "dimension": "深度追问",
+      "is_followup": true,
+      "source": "local_fallback",
+      "text": "请具体到一个函数：它处理了什么边界？你用什么输入验证？",
+      "focus": "追问回答是否能落到函数实现、边界输入和验证证据。",
+      "evidence": "get_static_analysis 显示 final/image_ops.py not found"
+    },
+    {
+      "id": "q3",
+      "dimension": "算法原理与边界处理",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "中值滤波处理图像边缘像素时，通常采用什么填充策略？为什么？",
+      "focus": "验证学生对必做功能核心算法及边界条件的理论掌握程度。",
+      "evidence": "材料缺失且前两轮回答未体现任何技术内容，需通过理论追问评估基础理解。"
+    }
+  ],
+  "answers": {
+    "q1": "我是奶龙",
+    "q2": "我才是奶龙",
+    "q3": "我会喷火"
+  }
+}

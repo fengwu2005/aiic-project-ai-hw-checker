@@ -1,0 +1,13 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "dimension": "代码完整性",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "你的 final/image_ops.py 文件为何缺失？请提供代码路径或解释原因。",
+      "focus": "确认代码提交状态",
+      "evidence": "静态分析显示 final/image_ops.py not found，代码行数为 0。"
+    }
+  ]
+}

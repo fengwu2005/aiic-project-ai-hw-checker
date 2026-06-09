@@ -1,0 +1,46 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "dimension": "实现原理",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "resize_image为何硬编码返回(1,1)？请说明应如何根据scale参数计算目标宽高。",
+      "focus": "参数处理与尺寸计算逻辑",
+      "evidence": "final/image_ops.py第14行：return image.resize((1, 1)) 完全忽略scale参数"
+    },
+    {
+      "id": "q2",
+      "dimension": "基础图像概念",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "请说明图像反色在像素层面的计算原理，以及RGB通道值的具体变化规律。",
+      "focus": "像素级颜色变换原理",
+      "evidence": "必做功能包含反色，学生报告承认未完成，需考察基础图像处理概念。"
+    },
+    {
+      "id": "q3",
+      "dimension": "验证方式",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "验证 resize_image 是否正确，代码中应检查输出图像的哪些具体属性？",
+      "focus": "输出属性与测试验证逻辑",
+      "evidence": "学生报告承认未系统测试，resize_image 隐藏验收失败，需考察基础验证思路。"
+    },
+    {
+      "id": "q4",
+      "dimension": "基础图像处理概念",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "请简述固定卷积核边缘提取的基本原理，卷积核在图像上滑动时是如何计算中心像素新值的？",
+      "focus": "卷积计算与像素更新机制",
+      "evidence": "必做功能含边缘提取，代码缺失该函数，报告承认未完成，需考察基础概念理解。"
+    }
+  ],
+  "answers": {
+    "q1": "我不会",
+    "q2": "不会",
+    "q3": "不会",
+    "q4": "不会"
+  }
+}

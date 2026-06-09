@@ -1,0 +1,13 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "dimension": "代码实现",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "resize_image 接收了 scale 参数，但第14行直接返回 (1, 1)，请说明如何根据 scale 计算新尺寸？",
+      "focus": "验证参数使用与尺寸计算逻辑",
+      "evidence": "final/image_ops.py 第13-14行及验收记录 scale=2 should produce 8x8 image"
+    }
+  ]
+}

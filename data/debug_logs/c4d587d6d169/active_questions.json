@@ -1,0 +1,13 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "dimension": "核心算法实现",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "你的edge_detect函数直接返回原图。若实现固定卷积核边缘提取，你会如何遍历像素并计算卷积？",
+      "focus": "卷积核计算与像素遍历逻辑",
+      "evidence": "终版代码第40-42行仅返回副本，验收测试报错'edge pixel should be stronger than flat area'"
+    }
+  ]
+}

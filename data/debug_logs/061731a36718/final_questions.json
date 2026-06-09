@@ -1,0 +1,66 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "dimension": "代码实现与参数处理",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "resize_image 函数为何硬编码返回 (1, 1)？应如何根据 scale 参数正确计算新宽高？",
+      "focus": "验证学生是否理解图像缩放的核心逻辑及参数传递",
+      "evidence": "final/image_ops.py 第14行 return image.resize((1, 1)) 未使用 scale 参数，且验收测试 resize enlarge and shrink 失败"
+    },
+    {
+      "id": "q2",
+      "dimension": "基础API与文件I/O",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "请解释 load_image 和 save_image 函数中 PIL 的 Image.open 和 image.save 分别做了什么？",
+      "focus": "验证学生对图像读取与保存底层操作的理解",
+      "evidence": "final/image_ops.py 第4-10行已实现基础I/O"
+    },
+    {
+      "id": "q3",
+      "dimension": "基础图像处理概念",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "crop_image 函数目前直接返回原图。请简述裁剪操作在像素坐标上是如何截取区域的？",
+      "focus": "验证学生对图像坐标与区域截取的基础理解",
+      "evidence": "final/image_ops.py 第21-22行 crop_image 仅 return image，未实现逻辑。"
+    },
+    {
+      "id": "q4",
+      "dimension": "深度追问",
+      "is_followup": true,
+      "source": "local_fallback",
+      "text": "请具体到一个函数：它处理了什么边界？你用什么输入验证？",
+      "focus": "追问回答是否能落到函数实现、边界输入和验证证据。",
+      "evidence": "final/image_ops.py 第21-22行 crop_image 仅 return image，未实现逻辑。"
+    },
+    {
+      "id": "q5",
+      "dimension": "基础API认知",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "rotate_image 目前直接返回原图。若用 PIL 实现旋转，应调用 Image 的哪个方法？angle 参数单位是什么？",
+      "focus": "验证学生对 PIL 旋转 API 的基础认知",
+      "evidence": "final/image_ops.py 第17-18行 rotate_image 仅 return image。"
+    },
+    {
+      "id": "q6",
+      "dimension": "基础图像处理概念",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "代码注释提到缺少 invert_image。反色操作在像素值上是如何计算的？",
+      "focus": "验证学生对基础图像处理概念（反色）的理解，即使代码未实现。",
+      "evidence": "final/image_ops.py 第24行注释提到 Missing invert_image..."
+    }
+  ],
+  "answers": {
+    "q1": "我不会啊，这咋办，我没明白",
+    "q2": "我还是有点不会咋办",
+    "q3": "现在是直接返回原图的，如果需要裁剪，可以设置xy轴的最小坐标到最大坐标，然后利用image的裁切工具取一下这部分内容即可",
+    "q4": "我没懂啥意思，能解释一下吗",
+    "q5": "image.rotate，参数单位是pi",
+    "q6": "直接用255-当前像素值就好了"
+  }
+}

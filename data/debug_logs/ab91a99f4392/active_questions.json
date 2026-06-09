@@ -1,0 +1,13 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "dimension": "实现原理",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "resize_image为何硬编码返回(1,1)？请说明应如何根据scale参数计算目标宽高。",
+      "focus": "参数处理与尺寸计算逻辑",
+      "evidence": "final/image_ops.py第14行：return image.resize((1, 1)) 完全忽略scale参数"
+    }
+  ]
+}

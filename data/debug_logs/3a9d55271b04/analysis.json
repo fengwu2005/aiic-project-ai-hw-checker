@@ -1,0 +1,92 @@
+{
+  "id": "3a9d55271b04",
+  "extracted_files": [],
+  "materials": {
+    "readme": {
+      "expected": "README.md",
+      "found": null,
+      "chars": 0,
+      "preview": ""
+    },
+    "final_code": {
+      "expected": "final/image_ops.py",
+      "found": null,
+      "chars": 0,
+      "preview": ""
+    },
+    "student_report": {
+      "expected": "report/report.md",
+      "found": null,
+      "chars": 0,
+      "preview": ""
+    }
+  },
+  "missing": [
+    "README.md",
+    "final/image_ops.py",
+    "report/report.md"
+  ],
+  "code": {
+    "line_count": 0,
+    "functions": [],
+    "function_lines": {},
+    "classes": [],
+    "imports": [],
+    "syntax_ok": true,
+    "syntax_error": "",
+    "features": {
+      "image_io": false,
+      "cli_interface": false,
+      "resize": false,
+      "rotate": false,
+      "crop": false,
+      "invert": false,
+      "blur": false,
+      "edge_detection": false,
+      "median_filter": false,
+      "pixel_access": false,
+      "parameter_validation": false,
+      "error_handling": false
+    }
+  },
+  "execution": {
+    "enabled": true,
+    "passed": 0,
+    "total": 1,
+    "pass_rate": 0,
+    "status": "failed",
+    "cases": [
+      {
+        "name": "final/image_ops.py exists",
+        "ok": false,
+        "detail": "file not found"
+      }
+    ],
+    "error": "final/image_ops.py not found"
+  },
+  "interaction": {
+    "sections": 0,
+    "readme_chars": 0,
+    "final_code_chars": 0,
+    "student_report_chars": 0,
+    "thinking_terms": [],
+    "report_specificity": 0,
+    "mentions_implementation": false,
+    "mentions_validation": false,
+    "mentions_personal_changes": false,
+    "mentions_limitations": false
+  },
+  "similarity": {
+    "enabled": true,
+    "risk_level": "low",
+    "risk_label": "无法查重",
+    "highest_similarity": 0,
+    "matches": [],
+    "note": "未读取到终版代码，无法进行代码相似度分析。"
+  },
+  "privacy": {
+    "mode": "full",
+    "label": "完整材料模式",
+    "description": "API 可接收完整 README、终版代码和报告，用于生成更贴近代码的答辩问题。"
+  }
+}

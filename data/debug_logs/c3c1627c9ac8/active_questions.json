@@ -1,0 +1,13 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "dimension": "终版代码实现",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "resize_image为何无视scale参数且固定输出1x1？请说明正确尺寸计算逻辑。",
+      "focus": "缩放函数参数处理与尺寸计算",
+      "evidence": "final/image_ops.py第14行硬编码resize((1,1))，验收测试scale=2失败。"
+    }
+  ]
+}

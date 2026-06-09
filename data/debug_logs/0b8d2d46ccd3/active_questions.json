@@ -1,0 +1,13 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "dimension": "代码实现",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "resize_image 函数中为何将输出尺寸硬编码为 (1, 1)？请说明如何根据 scale 参数正确计算新宽高。",
+      "focus": "验证学生对缩放函数参数使用与尺寸计算的理解",
+      "evidence": "final/image_ops.py 第14行 return image.resize((1, 1)) 及验收失败记录 scale=2 should produce 8x8 image"
+    }
+  ]
+}

@@ -1,0 +1,151 @@
+{
+  "id": "ab91a99f4392",
+  "extracted_files": [
+    "ImageLab_Submission/README.md",
+    "ImageLab_Submission/final/image_ops.py",
+    "ImageLab_Submission/report/report.md"
+  ],
+  "materials": {
+    "readme": {
+      "expected": "README.md",
+      "found": "ImageLab_Submission/README.md",
+      "chars": 206,
+      "preview": "# ImageLab 提交说明\n\n程序入口是 `final/image_ops.py`，核心依赖是 Pillow/PIL。\n\n## 运行方式\n\n```bash\npython final/image_ops.py input.png output.png invert\n```\n\n## 功能说明\n\n本提交实现图片读取、保存、缩放、旋转、裁剪、反色、模糊、边缘检测、中值滤波和统一调度。具体完成度以代码和报告为准。\n"
+    },
+    "final_code": {
+      "expected": "final/image_ops.py",
+      "found": "ImageLab_Submission/final/image_ops.py",
+      "chars": 412,
+      "preview": "from PIL import Image\n\n\ndef load_image(path):\n    return Image.open(path)\n\n\ndef save_image(image, path):\n    image.save(path)\n    return path\n\n\ndef resize_image(image, scale):\n    return image.resize((1, 1))\n\n\ndef rotate_image(image, angle):\n    return image\n\n\ndef crop_image(image, left, top, right, bottom):\n    return image\n\n# Missing invert_image, blur_image, edge_detect, median_filter and transform_image.\n"
+    },
+    "student_report": {
+      "expected": "report/report.md",
+      "found": "ImageLab_Submission/report/report.md",
+      "chars": 65,
+      "preview": "# ImageLab 学生报告\n\n我提交了一个初步版本，只完成了读取、保存和一部分缩放函数。很多功能还没有完成，也没有系统测试。\n"
+    }
+  },
+  "missing": [],
+  "code": {
+    "line_count": 13,
+    "functions": [
+      "load_image",
+      "save_image",
+      "resize_image",
+      "rotate_image",
+      "crop_image"
+    ],
+    "function_lines": {
+      "load_image": 4,
+      "save_image": 8,
+      "resize_image": 13,
+      "rotate_image": 17,
+      "crop_image": 21
+    },
+    "classes": [],
+    "imports": [
+      "PIL"
+    ],
+    "syntax_ok": true,
+    "syntax_error": "",
+    "features": {
+      "image_io": true,
+      "cli_interface": false,
+      "resize": true,
+      "rotate": true,
+      "crop": true,
+      "invert": true,
+      "blur": true,
+      "edge_detection": true,
+      "median_filter": true,
+      "pixel_access": false,
+      "parameter_validation": false,
+      "error_handling": false
+    }
+  },
+  "execution": {
+    "cases": [
+      {
+        "name": "import final/image_ops.py",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "name": "required image function API",
+        "ok": false,
+        "detail": "AssertionError('missing functions: invert_image, blur_image, edge_detect, median_filter, transform_image')"
+      },
+      {
+        "name": "load_image and save_image",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "name": "resize enlarge and shrink",
+        "ok": false,
+        "detail": "AssertionError('scale=2 should produce 8x8 image')"
+      },
+      {
+        "name": "rotate_image",
+        "ok": false,
+        "detail": "AssertionError('rotation should move pixels')"
+      },
+      {
+        "name": "crop_image",
+        "ok": false,
+        "detail": "AssertionError('crop should return selected region size')"
+      },
+      {
+        "name": "invert_image",
+        "ok": false,
+        "detail": "AttributeError(\"module 'student_image_ops' has no attribute 'invert_image'\")"
+      },
+      {
+        "name": "blur_image average kernel",
+        "ok": false,
+        "detail": "AttributeError(\"module 'student_image_ops' has no attribute 'blur_image'\")"
+      },
+      {
+        "name": "edge_detect fixed convolution",
+        "ok": false,
+        "detail": "AttributeError(\"module 'student_image_ops' has no attribute 'edge_detect'\")"
+      },
+      {
+        "name": "median_filter",
+        "ok": false,
+        "detail": "AttributeError(\"module 'student_image_ops' has no attribute 'median_filter'\")"
+      },
+      {
+        "name": "transform_image dispatcher",
+        "ok": false,
+        "detail": "AttributeError(\"module 'student_image_ops' has no attribute 'transform_image'\")"
+      },
+      {
+        "name": "parameter validation",
+        "ok": true,
+        "detail": ""
+      }
+    ],
+    "passed": 3,
+    "total": 12,
+    "pass_rate": 0.25,
+    "status": "partial",
+    "enabled": true,
+    "returncode": 0
+  },
+  "interaction": {
+    "sections": 1,
+    "readme_chars": 206,
+    "final_code_chars": 412,
+    "student_report_chars": 65,
+    "thinking_terms": [
+      "测试",
+      "函数"
+    ],
+    "report_specificity": 2,
+    "mentions_implementation": true,
+    "mentions_validation": true,
+    "mentions_personal_changes": false,
+    "mentions_limitations": false
+  }
+}

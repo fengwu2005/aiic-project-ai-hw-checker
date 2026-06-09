@@ -1,0 +1,13 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "dimension": "实现细节与边界处理",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "edge_detect 中卷积循环跳过了图像最外圈像素，这些像素在输出图中是什么值？为什么这样处理？",
+      "focus": "边缘检测的边界像素处理逻辑",
+      "evidence": "代码第83行初始化全黑，第92-93行循环范围 range(1, height - 1) 跳过边缘。"
+    }
+  ]
+}

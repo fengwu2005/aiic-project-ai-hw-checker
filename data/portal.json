@@ -1,0 +1,112 @@
+{
+  "users": {
+    "76ac1c8279ec4423": {
+      "id": "76ac1c8279ec4423",
+      "role": "teacher",
+      "username": "teacher_demo",
+      "display_name": "演示教师",
+      "password_hash": "77f4630638a9b55691109ebc$7d124935a65424490c240c4ae7a367f694616906c7626415ab38f92ed918be05",
+      "class_id": "",
+      "created_at": "2026-06-06T12:02:25.472984+00:00"
+    },
+    "17b0a82d56caab95": {
+      "id": "17b0a82d56caab95",
+      "role": "student",
+      "username": "student_alpha",
+      "display_name": "陈安然",
+      "password_hash": "88f3ee75eb40fdece9c32f5d$d89d6ac9178da25f814b0d1c6546d4f1d92167d206496d6c5ef077a3b871fd79",
+      "class_id": "class-ai-2026",
+      "created_at": "2026-06-06T12:02:25.558679+00:00"
+    },
+    "8268a9a817a05a87": {
+      "id": "8268a9a817a05a87",
+      "role": "student",
+      "username": "student_beta",
+      "display_name": "李博文",
+      "password_hash": "17b0c560b017f1b051128f5c$4512a6fc58b4e8362f8d44a80cda2c3a55f540baa15a1840bb068822f2413172",
+      "class_id": "class-ai-2026",
+      "created_at": "2026-06-06T12:02:25.643571+00:00"
+    },
+    "47e653d05c05e5c1": {
+      "id": "47e653d05c05e5c1",
+      "role": "student",
+      "username": "student_gamma",
+      "display_name": "王嘉宁",
+      "password_hash": "ef97fa29bb55710b00e1e36b$0a4b76649e03e80a637e6d36dd6c6bdff7da9e2db78055fbca771f6edb2fc981",
+      "class_id": "class-ai-2026",
+      "created_at": "2026-06-06T12:02:25.732142+00:00"
+    },
+    "60581fc8966a7823": {
+      "id": "60581fc8966a7823",
+      "role": "student",
+      "username": "student_delta",
+      "display_name": "赵明远",
+      "password_hash": "c5d8e4b9862b741e3ee2d72b$c7836abb9835124b0bd0ce2584b1e29a46017e72e3207b00237db54410fc1b04",
+      "class_id": "class-ai-2026",
+      "created_at": "2026-06-06T12:02:25.810940+00:00"
+    }
+  },
+  "tokens": {
+    "VPwBSst4GA7rOCni7ZieUDkuw6gWQAz1": {
+      "user_id": "76ac1c8279ec4423",
+      "created_at": "2026-06-06T15:31:47.123060+00:00"
+    },
+    "ttebLCJ-Mz0MGtatow05XIScXSXoPDLT": {
+      "user_id": "76ac1c8279ec4423",
+      "created_at": "2026-06-07T05:20:22.693191+00:00"
+    },
+    "KT_2T7dy-y4OPQS9PhRMN0sI6j_zJ_Br": {
+      "user_id": "17b0a82d56caab95",
+      "created_at": "2026-06-07T05:48:26.182244+00:00"
+    },
+    "eM7tvZlPClKEfp5ciikD0DM7gW-P0WO_": {
+      "user_id": "76ac1c8279ec4423",
+      "created_at": "2026-06-07T06:51:43.263989+00:00"
+    },
+    "Lzedq0ik5dXlZrHpkXd6CCcMtYfHNbjV": {
+      "user_id": "76ac1c8279ec4423",
+      "created_at": "2026-06-07T12:04:45.968948+00:00"
+    },
+    "MJiAnhYuuyQKuZoK1Gli_paDxE-X8Xuv": {
+      "user_id": "76ac1c8279ec4423",
+      "created_at": "2026-06-07T12:05:41.713619+00:00"
+    },
+    "qzt0YV45WnSaevFSMPCY-bnfuyOUxG0i": {
+      "user_id": "76ac1c8279ec4423",
+      "created_at": "2026-06-07T12:27:46.698718+00:00"
+    },
+    "C-hiA_oVM2BV1-bm6wlgGlqkvLhNSeIe": {
+      "user_id": "17b0a82d56caab95",
+      "created_at": "2026-06-07T14:02:55.627257+00:00"
+    },
+    "F4_b9xguQFNeCnWPgchvqAovxMWxvX8j": {
+      "user_id": "17b0a82d56caab95",
+      "created_at": "2026-06-07T18:59:29.193040+00:00"
+    },
+    "gAKG-uYn-sTzORWMk78VUBC1gte7SxZi": {
+      "user_id": "17b0a82d56caab95",
+      "created_at": "2026-06-08T01:46:07.309733+00:00"
+    },
+    "DCb3xyqu8egql9qRb-DyleXBrScAnffT": {
+      "user_id": "76ac1c8279ec4423",
+      "created_at": "2026-06-08T03:24:51.431103+00:00"
+    }
+  },
+  "classes": {
+    "class-ai-2026": {
+      "id": "class-ai-2026",
+      "name": "智能方向 2026 春",
+      "code": "AI2026",
+      "created_at": "2026-06-05T07:57:35.976864+00:00"
+    }
+  },
+  "assignments": {
+    "image-lab": {
+      "id": "image-lab",
+      "class_id": "class-ai-2026",
+      "title": "ImageLab：PIL 图像变换作业",
+      "description": "实现图片读取与多种图像变换，并通过系统助教现场答辩。",
+      "created_at": "2026-06-05T07:57:35.976864+00:00"
+    }
+  }
+}

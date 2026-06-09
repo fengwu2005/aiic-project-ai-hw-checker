@@ -1,0 +1,13 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "dimension": "代码实现与逻辑",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "transform_image仅处理invert，若传入resize参数最终保存的图像是什么？请说明原因。",
+      "focus": "调度器分支缺失与默认执行路径",
+      "evidence": "final/image_ops.py第44-49行仅判断operation==\"invert\"，无其他路由直接保存原图"
+    }
+  ]
+}

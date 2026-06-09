@@ -1,0 +1,13 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "dimension": "submission_status",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "final/image_ops.py 文件未找到，请说明代码存放位置或为何未提交。",
+      "focus": "确认代码文件是否存在及提交状态",
+      "evidence": "Static analysis result: final/image_ops.py not found."
+    }
+  ]
+}

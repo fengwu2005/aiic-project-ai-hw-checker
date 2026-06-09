@@ -1,0 +1,182 @@
+{
+  "id": "7271835df6b4",
+  "extracted_files": [
+    "ImageLab_Submission/README.md",
+    "ImageLab_Submission/final/image_ops.py",
+    "ImageLab_Submission/report/report.md"
+  ],
+  "materials": {
+    "readme": {
+      "expected": "README.md",
+      "found": "ImageLab_Submission/README.md",
+      "chars": 934,
+      "preview": "# ImageLab 作业提交说明\n\n这是一个命令行图像变换工具。程序入口是 `final/image_ops.py`，核心依赖是 Pillow/PIL。\n\n## 功能清单\n\n- 读取图片并统一转换为 RGB 模式\n- 保存图片到目标路径\n- 按比例放大和缩小图片\n- 按角度旋转图片\n- 按坐标裁剪图片\n- 反色处理\n- 3x3 均值模糊\n- 固定卷积核边缘提取\n- 中值滤波\n- 统一命令行调度入口\n- 对非法缩放比例、非法裁剪框、非法滤波尺寸和未知操作抛出明确错误\n\n## 运行示例\n\n```bash\npython final/image_ops.py input.png output.png invert\npython final/image_ops.py input.png output.png resize --scale 2\npython final/image_ops.py input.png output.png rotate --angle 90\npython final/image_ops.py input.png output.png crop --box 10,10,120,120\npython final/image_ops.py input.png output.png median --size 3\n```\n\n## 自查方式\n\n我用小尺寸 RGB 图片检查了：\n\n- `resize_image` 是否按比例改变尺寸\n- `crop_image` 是否返回正确区域\n- `invert_image` 是否把黑色变白色\n- `blur_image` 是否降低孤立亮点强度\n- `edge_detect` 是否让边缘区域比平坦区域更亮\n- `median_filter` 是否移除孤立噪点\n\n## 已知限制\n\n- 当前版本主要处理 RGB 图像，透明通道会在读取后转为 RGB。\n- 模糊和边缘检测使用固定 3x3 窗口，速度适合课程规模图片，不适合超大图批处理。\n- 命令行只支持单步变换，多步流水线可以作为后续扩展。\n\n## 报告说明\n\n详细实现方法、验证方式、关键贡献和已知不足见 `report/report.md`。\n"
+    },
+    "final_code": {
+      "expected": "final/image_ops.py",
+      "found": "ImageLab_Submission/final/image_ops.py",
+      "chars": 6121,
+      "preview": "import argparse\nimport json\nfrom pathlib import Path\n\nfrom PIL import Image, ImageOps\n\n\ndef _clamp(value):\n    return max(0, min(255, int(round(value))))\n\n\ndef _as_rgb(image):\n    if not isinstance(image, Image.Image):\n        raise TypeError(\"image must be a PIL Image\")\n    return image.convert(\"RGB\")\n\n\ndef load_image(path):\n    try:\n        return Image.open(path).convert(\"RGB\")\n    except Exception as exc:\n        raise ValueError(f\"cannot load image: {path}\") from exc\n\n\ndef save_image(image, path):\n    output_path = Path(path)\n    output_path.parent.mkdir(parents=True, exist_ok=True)\n    _as_rgb(image).save(output_path)\n    return str(output_path)\n\n\ndef resize_image(image, scale):\n    scale = float(scale)\n    if scale <= 0:\n        raise ValueError(\"scale must be greater than 0\")\n    source = _as_rgb(image)\n    width, height = source.size\n    new_size = (max(1, round(width * scale)), max(1, round(height * scale)))\n    return source.resize(new_size)\n\n\ndef rotate_image(image, angle):\n    return _as_rgb(image).rotate(float(angle), expand=False)\n\n\ndef crop_image(image, left, top, right, bottom):\n    source = _as_rgb(image)\n    left, top, right, bottom = map(int, (left, top, right, "
+    },
+    "student_report": {
+      "expected": "report/report.md",
+      "found": "ImageLab_Submission/report/report.md",
+      "chars": 1526,
+      "preview": "# ImageLab 学生报告\n\n## 一、项目实现方法\n\n我实现的 ImageLab 是一个基于 Pillow/PIL 的命令行图像变换工具。核心思路是让 `load_image` 统一读取并转换为 RGB 图像，然后让每个变换函数接收 Image 对象并返回新的 Image 对象。命令行层只负责解析参数，真正的业务逻辑集中在 `resize_image`、`crop_image`、`invert_image`、`blur_image`、`edge_detect` 和 `median_filter` 等函数中。\n\n## 二、关键功能说明\n\n`resize_image` 根据比例计算新尺寸，并拒绝小于等于 0 的比例。`crop_image` 会检查裁剪框是否在图片范围内，避免无效坐标产生难以解释的输出。`invert_image` 使用 RGB 图像进行反色，避免不同图像模式导致的错误。\n\n模糊和中值滤波是我重点修改的部分。均值模糊使用 3x3 邻域，计算每个通道的平均值；中值滤波收集窗口内每个通道的像素值并取中位数，用来去除孤立噪点。边缘检测使用固定 Laplacian 卷积核，先取响应强度的绝对值，再通过 `_clamp` 限制结果在 0 到 255。\n\n`transform_image` 是统一调度入口，支持 resize、rotate、crop、invert、blur、edge 和 median。未知操作会抛出 `ValueError`，而不是静默保存原图。\n\n## 三、关键贡献\n\n- 统一最终函数接口，保证系统可以直接调用每个图像处理函数。\n- 让 `load_image` 统一转换为 RGB，减少模式差异导致的问题。\n- 增加缩放比例、裁剪框、滤波窗口和未知操作校验。\n- 手写均值模糊、中值滤波和固定卷积核边缘检测。\n- 设计 `transform_image` 作为 CLI 和业务函数之间的稳定调度层。\n\n## 四、系统验收准备与自查方法\n\n我根据作业要求检查了固定函数接口，确保 `load_image`、`save_image`、`resize_image`、`rotate_image`、`crop_image`、`invert_image`、`blur_image`、`edge_detect`、`median_filter` 和 `transform_image` 都可以被外部直接调用。\n\n我手动构造小尺寸测试图片，分别检查缩放尺寸、裁剪像素、反色结果、均值模糊中心像素、边缘检测强度和中值滤波去噪效果。\n\n具体自查输入包括：\n\n- 2x2 黑白图片：验证 `invert_image` 是否把 `(0,0,0)` 变成 `(255,255,255)`。\n- 4x4 渐变图片：验证 `crop_image(image, 1, 1, 3, 3)"
+    }
+  },
+  "missing": [],
+  "code": {
+    "line_count": 164,
+    "functions": [
+      "_clamp",
+      "_as_rgb",
+      "load_image",
+      "save_image",
+      "resize_image",
+      "rotate_image",
+      "crop_image",
+      "invert_image",
+      "blur_image",
+      "edge_detect",
+      "median_filter",
+      "transform_image",
+      "_parse_box",
+      "build_parser",
+      "main"
+    ],
+    "function_lines": {
+      "_clamp": 8,
+      "_as_rgb": 12,
+      "load_image": 18,
+      "save_image": 25,
+      "resize_image": 32,
+      "rotate_image": 42,
+      "crop_image": 46,
+      "invert_image": 57,
+      "blur_image": 61,
+      "edge_detect": 81,
+      "median_filter": 106,
+      "transform_image": 131,
+      "_parse_box": 161,
+      "build_parser": 168,
+      "main": 180
+    },
+    "classes": [],
+    "imports": [
+      "argparse",
+      "json",
+      "pathlib",
+      "PIL"
+    ],
+    "syntax_ok": true,
+    "syntax_error": "",
+    "features": {
+      "image_io": true,
+      "cli_interface": true,
+      "resize": true,
+      "rotate": true,
+      "crop": true,
+      "invert": true,
+      "blur": true,
+      "edge_detection": true,
+      "median_filter": true,
+      "pixel_access": true,
+      "parameter_validation": true,
+      "error_handling": true
+    }
+  },
+  "execution": {
+    "cases": [
+      {
+        "name": "import final/image_ops.py",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "name": "required image function API",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "name": "load_image and save_image",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "name": "resize enlarge and shrink",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "name": "rotate_image",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "name": "crop_image",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "name": "invert_image",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "name": "blur_image average kernel",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "name": "edge_detect fixed convolution",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "name": "median_filter",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "name": "transform_image dispatcher",
+        "ok": true,
+        "detail": ""
+      },
+      {
+        "name": "parameter validation",
+        "ok": true,
+        "detail": ""
+      }
+    ],
+    "passed": 12,
+    "total": 12,
+    "pass_rate": 1.0,
+    "status": "passed",
+    "enabled": true,
+    "returncode": 0
+  },
+  "interaction": {
+    "sections": 6,
+    "readme_chars": 934,
+    "final_code_chars": 6121,
+    "student_report_chars": 1526,
+    "thinking_terms": [
+      "验证",
+      "边界",
+      "修改",
+      "测试",
+      "验收",
+      "函数",
+      "像素",
+      "卷积",
+      "滤波",
+      "原因"
+    ],
+    "report_specificity": 3,
+    "mentions_implementation": true,
+    "mentions_validation": true,
+    "mentions_personal_changes": true,
+    "mentions_limitations": true
+  }
+}

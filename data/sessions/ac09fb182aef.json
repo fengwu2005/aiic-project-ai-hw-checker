@@ -1,0 +1,268 @@
+{
+  "id": "ac09fb182aef",
+  "analysis": {
+    "id": "ac09fb182aef",
+    "extracted_files": [
+      "Dockerfile",
+      "lab.sh",
+      "Makefile",
+      "sources.list",
+      "topo.conf"
+    ],
+    "materials": {
+      "readme": {
+        "expected": "README.md",
+        "found": null,
+        "chars": 0,
+        "preview": ""
+      },
+      "final_code": {
+        "expected": "final/image_ops.py",
+        "found": null,
+        "chars": 0,
+        "preview": ""
+      },
+      "student_report": {
+        "expected": "report/report.md",
+        "found": null,
+        "chars": 0,
+        "preview": ""
+      }
+    },
+    "missing": [
+      "README.md",
+      "final/image_ops.py",
+      "report/report.md"
+    ],
+    "code": {
+      "line_count": 0,
+      "functions": [],
+      "function_lines": {},
+      "classes": [],
+      "imports": [],
+      "syntax_ok": true,
+      "syntax_error": "",
+      "features": {
+        "image_io": false,
+        "cli_interface": false,
+        "resize": false,
+        "rotate": false,
+        "crop": false,
+        "invert": false,
+        "blur": false,
+        "edge_detection": false,
+        "median_filter": false,
+        "pixel_access": false,
+        "parameter_validation": false,
+        "error_handling": false
+      }
+    },
+    "execution": {
+      "enabled": true,
+      "passed": 0,
+      "total": 1,
+      "pass_rate": 0,
+      "status": "failed",
+      "cases": [
+        {
+          "name": "final/image_ops.py exists",
+          "ok": false,
+          "detail": "file not found"
+        }
+      ],
+      "error": "final/image_ops.py not found"
+    },
+    "interaction": {
+      "sections": 0,
+      "readme_chars": 0,
+      "final_code_chars": 0,
+      "student_report_chars": 0,
+      "thinking_terms": [],
+      "report_specificity": 0,
+      "mentions_implementation": false,
+      "mentions_validation": false,
+      "mentions_personal_changes": false,
+      "mentions_limitations": false
+    },
+    "privacy": {
+      "mode": "full",
+      "label": "完整材料模式",
+      "description": "API 可接收完整 README、终版代码和报告，用于生成更贴近代码的答辩问题。"
+    }
+  },
+  "material_texts": {
+    "readme": "",
+    "final_code": "",
+    "student_report": ""
+  },
+  "questions": [
+    {
+      "id": "q1",
+      "dimension": "代码完整性",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "你的 final/image_ops.py 文件为何缺失？请提供代码路径或解释原因。",
+      "focus": "确认代码提交状态",
+      "evidence": "静态分析显示 final/image_ops.py not found，代码行数为 0。"
+    }
+  ],
+  "question_pool": [
+    {
+      "id": "q1",
+      "dimension": "代码理解",
+      "is_followup": false,
+      "source": "local_seed",
+      "text": "请解释 `load_image` 为什么要统一图像模式。",
+      "focus": "考察是否理解图像模式、RGB 转换和后续像素处理的关系。",
+      "evidence": "final/image_ops.py `load_image`"
+    },
+    {
+      "id": "q2",
+      "dimension": "实现方法",
+      "is_followup": false,
+      "source": "local_seed",
+      "text": "`blur_image` 的 3x3 均值是怎么计算的？",
+      "focus": "考察是否能说明窗口、通道平均和边界处理。",
+      "evidence": "final/image_ops.py `blur_image`；隐藏验收包含 `blur_image` 相关用例"
+    },
+    {
+      "id": "q3",
+      "dimension": "边界情况",
+      "is_followup": false,
+      "source": "local_seed",
+      "text": "`crop_image` 如何判断裁剪框非法？为什么要这样做？",
+      "focus": "考察参数校验、坐标边界和异常设计。",
+      "evidence": "final/image_ops.py `crop_image`；隐藏验收包含 `parameter validation` 相关用例"
+    },
+    {
+      "id": "q4",
+      "dimension": "报告证据",
+      "is_followup": false,
+      "source": "local_seed",
+      "text": "报告里最关键的实现，对应哪个函数？",
+      "focus": "考察学生能否把报告描述绑定到具体代码证据。",
+      "evidence": "report/report.md 的实现说明；final/image_ops.py 对应函数实现"
+    },
+    {
+      "id": "q5",
+      "dimension": "边界情况",
+      "is_followup": false,
+      "source": "local_seed",
+      "text": "非法缩放比例或裁剪框时，你的代码怎么处理？",
+      "focus": "追问参数校验能力。",
+      "evidence": "隐藏验收包含 `parameter validation` 相关用例"
+    }
+  ],
+  "agent_tool_results": [
+    {
+      "tool": "get_static_analysis",
+      "ok": true,
+      "result": {
+        "missing": [
+          "README.md",
+          "final/image_ops.py",
+          "report/report.md"
+        ],
+        "code": {
+          "line_count": 0,
+          "functions": [],
+          "function_lines": {},
+          "classes": [],
+          "imports": [],
+          "syntax_ok": true,
+          "syntax_error": "",
+          "features": {
+            "image_io": false,
+            "cli_interface": false,
+            "resize": false,
+            "rotate": false,
+            "crop": false,
+            "invert": false,
+            "blur": false,
+            "edge_detection": false,
+            "median_filter": false,
+            "pixel_access": false,
+            "parameter_validation": false,
+            "error_handling": false
+          }
+        },
+        "execution": {
+          "enabled": true,
+          "passed": 0,
+          "total": 1,
+          "pass_rate": 0,
+          "status": "failed",
+          "cases": [
+            {
+              "name": "final/image_ops.py exists",
+              "ok": false,
+              "detail": "file not found"
+            }
+          ],
+          "error": "final/image_ops.py not found"
+        },
+        "interaction": {
+          "sections": 0,
+          "readme_chars": 0,
+          "final_code_chars": 0,
+          "student_report_chars": 0,
+          "thinking_terms": [],
+          "report_specificity": 0,
+          "mentions_implementation": false,
+          "mentions_validation": false,
+          "mentions_personal_changes": false,
+          "mentions_limitations": false
+        }
+      }
+    },
+    {
+      "tool": "read_material",
+      "ok": true,
+      "result": {
+        "key": "final_code",
+        "path": "final/image_ops.py",
+        "start_line": 1,
+        "end_line": 1,
+        "content": ""
+      }
+    },
+    {
+      "tool": "read_material",
+      "ok": true,
+      "result": {
+        "key": "student_report",
+        "path": "report/report.md",
+        "start_line": 1,
+        "end_line": 1,
+        "content": ""
+      }
+    },
+    {
+      "tool": "read_material",
+      "ok": true,
+      "result": {
+        "key": "readme",
+        "path": "README.md",
+        "start_line": 1,
+        "end_line": 1,
+        "content": ""
+      }
+    }
+  ],
+  "current_index": 0,
+  "answers": {},
+  "report": null,
+  "agent_enabled": true,
+  "portal": {
+    "student_id": "17b0a82d56caab95",
+    "student_name": "陈安然",
+    "class_id": "class-ai-2026",
+    "class_name": "智能方向 2026 春",
+    "assignment_id": "image-lab",
+    "assignment_title": "ImageLab：PIL 图像变换作业",
+    "submitted_at": "2026-06-07T06:35:16.715485+00:00",
+    "status": "defending",
+    "deleted_by_student": true,
+    "deleted_at": "2026-06-07T07:28:48.154121+00:00"
+  }
+}

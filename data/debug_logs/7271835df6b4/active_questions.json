@@ -1,0 +1,13 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "dimension": "代码实现与边界处理",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "blur_image 循环范围设为 range(1, height-1) 会如何影响图像边缘像素的处理？",
+      "focus": "滤波窗口遍历策略对边缘像素的影响",
+      "evidence": "blur_image 第67行 for y in range(1, height - 1):"
+    }
+  ]
+}

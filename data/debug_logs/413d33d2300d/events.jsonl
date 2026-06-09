@@ -1,0 +1,1 @@
+{"ts": "2026-06-07T06:36:13.287349+00:00", "event": "submission_analyzed", "payload": {"extracted_files": ["Dockerfile", "lab.sh", "Makefile", "sources.list", "topo.conf"], "missing": ["README.md", "final/image_ops.py", "report/report.md"], "line_count": 0, "hidden_tests": "0/1", "report_chars": 0, "agent_enabled": true, "first_question_source": "local_seed"}}

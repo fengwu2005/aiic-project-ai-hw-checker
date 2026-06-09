@@ -1,0 +1,67 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "dimension": "代码实现与边界处理",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "`blur_image` 循环为何从 1 到 `height-1`？图像最外圈像素保留原值是否合理？",
+      "focus": "滤波边界处理策略",
+      "evidence": "`blur_image` 第67行 `for y in range(1, height - 1):` 及 `edge_detect` 相同逻辑"
+    },
+    {
+      "id": "q2",
+      "dimension": "澄清后的问题",
+      "is_followup": false,
+      "source": "api_agent_repaired",
+      "text": "题干解释：`edge_detect` 是边缘检测函数，它用 3x3 卷积核比较中心像素和周围像素，差异越大输出越亮。 `total` 是某个颜色通道经过卷积核加权后的累加值，可能为负，也可能超过 0-255。 代码里出现的 `_clamp` 通常是在防止像素值越界。 请你回答：`edge_detect` 第101行为何对 `total` 取绝对值？若不取绝对值，输出图像会出现什么现象 的核心原因是什么？请只围绕这个原因回答。",
+      "focus": "学生上一轮表示未理解题意，本轮不计入正式答辩；请基于澄清后的问题继续回答。",
+      "evidence": "`edge_detect` 第101行 `_clamp(abs(total))`",
+      "original_text": "`edge_detect` 第101行为何对 `total` 取绝对值？若不取绝对值，输出图像会出现什么现象？"
+    },
+    {
+      "id": "q3",
+      "dimension": "滤波原理与像素处理",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "`median_filter` 收集窗口内像素值后排序取中位数，为什么这能去除孤立噪点？请结合像素值变化说明。",
+      "focus": "中值滤波去噪原理与像素排序机制",
+      "evidence": "`median_filter` 第118-127行排序取中位数逻辑及报告第四部分验证说明"
+    },
+    {
+      "id": "q4",
+      "dimension": "深度追问",
+      "is_followup": true,
+      "source": "local_fallback",
+      "text": "请说清这个处理的原理、步骤，以及你怎么验证结果。",
+      "focus": "追问学生是否理解处理原理、执行过程和结果验证方式。",
+      "evidence": "`median_filter` 第118-127行排序取中位数逻辑及报告第四部分验证说明"
+    },
+    {
+      "id": "q5",
+      "dimension": "卷积核原理与像素响应",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "edge_detect 卷积核中心为8、周围为-1。请说明这种权重设计如何突出边缘像素？",
+      "focus": "卷积核权重与边缘响应关系",
+      "evidence": "`edge_detect` 第87-91行卷积核定义"
+    },
+    {
+      "id": "q6",
+      "dimension": "代码理解",
+      "is_followup": false,
+      "source": "local_fallback",
+      "text": "请解释 `load_image` 为什么要统一图像模式。",
+      "focus": "考察是否理解图像模式、RGB 转换和后续像素处理的关系。",
+      "evidence": "final/image_ops.py:18 `load_image`"
+    }
+  ],
+  "answers": {
+    "q1": "可以有两种做法，最外圈保留原像素，或者是在图像周围补一圈0来做blur，我选择的是最外圈保留原值",
+    "q2": "不取绝对值就会出现很多全黑的点",
+    "q3": "因为噪点往往是极端值，取中位数之后极端值几乎不可能是中位数，所以能去除噪点",
+    "q4": "中位数逻辑，就直接取周围9个像素值然后排序就行了，验证就肉眼看一看，或者是看极端值的个数",
+    "q5": "这个可以突出当前像素与周围像素的差异，一般来说边缘的地方和周围的像素值差异都比较大，这样的卷积核就能突出边缘",
+    "q6": "统一图像格式方便后续的转换，因为一开始图像有RGBA等多种格式，统一到RGB方便处理"
+  }
+}

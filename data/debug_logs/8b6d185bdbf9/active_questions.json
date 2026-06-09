@@ -1,0 +1,13 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "dimension": "代码实现与逻辑",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "resize_image 为何硬编码返回 (1, 1)？应如何根据 scale 计算新尺寸并正确调用 PIL resize？",
+      "focus": "验证学生对图像缩放核心逻辑及参数处理的掌握程度",
+      "evidence": "final/image_ops.py 第14行 return image.resize((1, 1)) 及验收用例 resize enlarge and shrink 失败"
+    }
+  ]
+}

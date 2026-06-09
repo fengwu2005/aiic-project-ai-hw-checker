@@ -1,6 +1,3 @@
 config/local_settings.json
-data/
-review.md
-accounts.md
 __pycache__/
 *.pyc

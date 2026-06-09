@@ -1,0 +1,98 @@
+{
+  "tool_results": [
+    {
+      "tool": "get_static_analysis",
+      "ok": true,
+      "result": {
+        "missing": [
+          "README.md",
+          "final/image_ops.py",
+          "report/report.md"
+        ],
+        "code": {
+          "line_count": 0,
+          "functions": [],
+          "function_lines": {},
+          "classes": [],
+          "imports": [],
+          "syntax_ok": true,
+          "syntax_error": "",
+          "features": {
+            "image_io": false,
+            "cli_interface": false,
+            "resize": false,
+            "rotate": false,
+            "crop": false,
+            "invert": false,
+            "blur": false,
+            "edge_detection": false,
+            "median_filter": false,
+            "pixel_access": false,
+            "parameter_validation": false,
+            "error_handling": false
+          }
+        },
+        "execution": {
+          "enabled": true,
+          "passed": 0,
+          "total": 1,
+          "pass_rate": 0,
+          "status": "failed",
+          "cases": [
+            {
+              "name": "final/image_ops.py exists",
+              "ok": false,
+              "detail": "file not found"
+            }
+          ],
+          "error": "final/image_ops.py not found"
+        },
+        "interaction": {
+          "sections": 0,
+          "readme_chars": 0,
+          "final_code_chars": 0,
+          "student_report_chars": 0,
+          "thinking_terms": [],
+          "report_specificity": 0,
+          "mentions_implementation": false,
+          "mentions_validation": false,
+          "mentions_personal_changes": false,
+          "mentions_limitations": false
+        }
+      }
+    },
+    {
+      "tool": "read_material",
+      "ok": true,
+      "result": {
+        "key": "final_code",
+        "path": "final/image_ops.py",
+        "start_line": 1,
+        "end_line": 1,
+        "content": ""
+      }
+    },
+    {
+      "tool": "read_material",
+      "ok": true,
+      "result": {
+        "key": "student_report",
+        "path": "report/report.md",
+        "start_line": 1,
+        "end_line": 1,
+        "content": ""
+      }
+    },
+    {
+      "tool": "read_material",
+      "ok": true,
+      "result": {
+        "key": "readme",
+        "path": "README.md",
+        "start_line": 1,
+        "end_line": 1,
+        "content": ""
+      }
+    }
+  ]
+}

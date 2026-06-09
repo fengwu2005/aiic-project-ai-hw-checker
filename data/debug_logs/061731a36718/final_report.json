@@ -1,0 +1,174 @@
+{
+  "total": 30,
+  "raw_total": 30,
+  "total_cap": 42,
+  "cap_note": "现场答辩回答无效，无法验证学生本人掌握程度；即使作业包完整，也只能给出很低的本人掌握可信度判断。",
+  "material_scores": {
+    "functionality": 10,
+    "code_quality": 6,
+    "validation": 4,
+    "process": 4,
+    "report": 3
+  },
+  "defense_score": 3,
+  "defense_validity": "invalid",
+  "per_question": [
+    {
+      "id": "q1",
+      "dimension": "代码实现与参数处理",
+      "question": "resize_image 函数为何硬编码返回 (1, 1)？应如何根据 scale 参数正确计算新宽高？",
+      "evidence": "final/image_ops.py 第14行 return image.resize((1, 1)) 未使用 scale 参数，且验收测试 resize enlarge and shrink 失败",
+      "focus": "验证学生是否理解图像缩放的核心逻辑及参数传递",
+      "answer": "我不会啊，这咋办，我没明白",
+      "score": 0,
+      "max_score": 5,
+      "evidence_hits": [],
+      "gaps": [
+        "学生表示不会或没有提供可评分信息。"
+      ],
+      "comment": "回答证据不足；主要问题：学生表示不会或没有提供可评分信息。"
+    },
+    {
+      "id": "q2",
+      "dimension": "基础API与文件I/O",
+      "question": "请解释 load_image 和 save_image 函数中 PIL 的 Image.open 和 image.save 分别做了什么？",
+      "evidence": "final/image_ops.py 第4-10行已实现基础I/O",
+      "focus": "验证学生对图像读取与保存底层操作的理解",
+      "answer": "我还是有点不会咋办",
+      "score": 0,
+      "max_score": 5,
+      "evidence_hits": [],
+      "gaps": [
+        "回答过短，难以判断是否真的理解。",
+        "没有说明函数位置、边界处理或修改原因。",
+        "没有落到图像处理概念，容易变成泛泛回答。",
+        "没有指出具体函数或文件，证据定位不足。"
+      ],
+      "comment": "回答证据不足；主要问题：回答过短，难以判断是否真的理解。"
+    },
+    {
+      "id": "q3",
+      "dimension": "基础图像处理概念",
+      "question": "crop_image 函数目前直接返回原图。请简述裁剪操作在像素坐标上是如何截取区域的？",
+      "evidence": "final/image_ops.py 第21-22行 crop_image 仅 return image，未实现逻辑。",
+      "focus": "验证学生对图像坐标与区域截取的基础理解",
+      "answer": "现在是直接返回原图的，如果需要裁剪，可以设置xy轴的最小坐标到最大坐标，然后利用image的裁切工具取一下这部分内容即可",
+      "score": 2,
+      "max_score": 5,
+      "evidence_hits": [
+        "回答长度足以表达一个完整解释。",
+        "提到了图像处理概念，例如像素、RGB、卷积或滤波。"
+      ],
+      "gaps": [
+        "没有说明函数位置、边界处理或修改原因。",
+        "没有指出具体函数或文件，证据定位不足。"
+      ],
+      "comment": "回答部分有效；主要缺口：没有说明函数位置、边界处理或修改原因。"
+    },
+    {
+      "id": "q4",
+      "dimension": "深度追问",
+      "question": "请具体到一个函数：它处理了什么边界？你用什么输入验证？",
+      "evidence": "final/image_ops.py 第21-22行 crop_image 仅 return image，未实现逻辑。",
+      "focus": "追问回答是否能落到函数实现、边界输入和验证证据。",
+      "answer": "我没懂啥意思，能解释一下吗",
+      "score": 0,
+      "max_score": 5,
+      "evidence_hits": [],
+      "gaps": [
+        "回答过短，难以判断是否真的理解。",
+        "没有说明函数位置、边界处理或修改原因。",
+        "没有落到图像处理概念，容易变成泛泛回答。",
+        "没有指出具体函数或文件，证据定位不足。"
+      ],
+      "comment": "回答证据不足；主要问题：回答过短，难以判断是否真的理解。"
+    },
+    {
+      "id": "q5",
+      "dimension": "基础API认知",
+      "question": "rotate_image 目前直接返回原图。若用 PIL 实现旋转，应调用 Image 的哪个方法？angle 参数单位是什么？",
+      "evidence": "final/image_ops.py 第17-18行 rotate_image 仅 return image。",
+      "focus": "验证学生对 PIL 旋转 API 的基础认知",
+      "answer": "image.rotate，参数单位是pi",
+      "score": 1,
+      "max_score": 5,
+      "evidence_hits": [
+        "提到了图像处理概念，例如像素、RGB、卷积或滤波。"
+      ],
+      "gaps": [
+        "回答过短，难以判断是否真的理解。",
+        "没有说明函数位置、边界处理或修改原因。",
+        "没有指出具体函数或文件，证据定位不足。"
+      ],
+      "comment": "回答证据不足；主要问题：回答过短，难以判断是否真的理解。"
+    },
+    {
+      "id": "q6",
+      "dimension": "基础图像处理概念",
+      "question": "代码注释提到缺少 invert_image。反色操作在像素值上是如何计算的？",
+      "evidence": "final/image_ops.py 第24行注释提到 Missing invert_image...",
+      "focus": "验证学生对基础图像处理概念（反色）的理解，即使代码未实现。",
+      "answer": "直接用255-当前像素值就好了",
+      "score": 1,
+      "max_score": 5,
+      "evidence_hits": [
+        "提到了图像处理概念，例如像素、RGB、卷积或滤波。"
+      ],
+      "gaps": [
+        "回答过短，难以判断是否真的理解。",
+        "没有说明函数位置、边界处理或修改原因。",
+        "没有指出具体函数或文件，证据定位不足。"
+      ],
+      "comment": "回答证据不足；主要问题：回答过短，难以判断是否真的理解。"
+    }
+  ],
+  "defense_detail": {
+    "raw": 4,
+    "max_raw": 30,
+    "avg_answer_len": 22,
+    "answered_count": 6,
+    "weak_answers": 5,
+    "no_knowledge_answers": 1,
+    "unique_answers": 6
+  },
+  "contribution": 25,
+  "contribution_level": "较低",
+  "risk_flags": [
+    {
+      "level": "high",
+      "label": "答辩无效",
+      "detail": "学生未能提供足够的代码、图像概念或验证证据。"
+    },
+    {
+      "level": "high",
+      "label": "隐藏验收未全过",
+      "detail": "隐藏验收通过 3/12。"
+    },
+    {
+      "level": "medium",
+      "label": "报告偏空泛",
+      "detail": "报告长度或具体证据不足。"
+    }
+  ],
+  "risk_rank": 3,
+  "risk_level": "high",
+  "risk_label": "高风险",
+  "strengths": [
+    "最终代码体现了较完整的图像读取、变换和滤波能力。",
+    "报告能同时说明实现方法和验证方式，可辅助判断学生掌握情况。"
+  ],
+  "risks": [
+    "现场答辩回答无效，无法验证学生本人掌握程度；即使作业包完整，也只能给出很低的本人掌握可信度判断。",
+    "答辩回答较短或泛化，和最终代码的对应关系不足。",
+    "教师隐藏验收通过 3/12，说明最终图像代码存在接口或行为缺口。",
+    "核心失败项涉及：blur, edge, median, dispatcher, api。"
+  ],
+  "basis": [
+    "最终代码功能、结构和系统验收表现作为作业结果证据。",
+    "教师隐藏验收结果作为代码真实行为证据。",
+    "学生报告中的实现方法、验证说明和限制说明作为学习过程证据。",
+    "现场答辩回答与终版代码、报告和隐藏验收的一致性作为理解程度证据。",
+    "系统不判断学生是否使用外部工具，只判断终版成果和答辩能否证明掌握。",
+    "若学生自主实现额外图像功能，教师可结合 README、隐藏验收、报告和答辩证据额外给出最多 5 分 bonus。"
+  ]
+}

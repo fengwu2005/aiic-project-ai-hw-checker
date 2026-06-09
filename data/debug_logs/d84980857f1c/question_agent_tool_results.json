@@ -1,0 +1,37 @@
+{
+  "tool_results": [
+    {
+      "tool": "read_material",
+      "ok": true,
+      "result": {
+        "key": "final_code",
+        "path": "final/image_ops.py",
+        "start_line": 1,
+        "end_line": 49,
+        "content": "1: from pathlib import Path\n2: from PIL import Image, ImageOps\n3: \n4: \n5: def load_image(path):\n6:     return Image.open(path).convert(\"RGB\")\n7: \n8: \n9: def save_image(image, path):\n10:     Path(path).parent.mkdir(parents=True, exist_ok=True)\n11:     image.save(path)\n12:     return str(path)\n13: \n14: \n15: def resize_image(image, scale):\n16:     width, height = image.size\n17:     return image.resize((int(width * float(scale)), int(height * float(scale))))\n18: \n19: \n20: def rotate_image(image, angle):\n21:     return image.rotate(float(angle))\n22: \n23: \n24: def crop_image(image, left, top, right, bottom):\n25:     return image.crop((left, top, right, bottom))\n26: \n27: \n28: def invert_image(image):\n29:     return ImageOps.invert(image.convert(\"RGB\"))\n30: \n31: \n32: def blur_image(image):\n33:     return image\n34: \n35: \n36: def edge_detect(image):\n37:     return image\n38: \n39: \n40: def median_filter(image, size=3):\n41:     return image\n42: \n43: \n44: def transform_image(input_path, output_path, operation, **kwargs):\n45:     image = load_image(input_path)\n46:     if operation == \"invert\":\n47:         image = invert_image(image)\n48:     save_image(image, output_path)\n49:     return str(output_path)"
+      }
+    },
+    {
+      "tool": "read_material",
+      "ok": true,
+      "result": {
+        "key": "student_report",
+        "path": "report/report.md",
+        "start_line": 1,
+        "end_line": 5,
+        "content": "1: # ImageLab 学生报告\n2: \n3: 这个作业实现了一个图片处理程序。我用了 PIL，可以打开图片、保存图片，也写了一些函数。运行时大概可以处理图片。\n4: \n5: 我测试过能打开一张图片并输出另一张图片。后续还需要完善模糊、边缘检测、中值滤波和错误处理。"
+      }
+    },
+    {
+      "tool": "read_material",
+      "ok": true,
+      "result": {
+        "key": "readme",
+        "path": "README.md",
+        "start_line": 1,
+        "end_line": 13,
+        "content": "1: # ImageLab 提交说明\n2: \n3: 程序入口是 `final/image_ops.py`，核心依赖是 Pillow/PIL。\n4: \n5: ## 运行方式\n6: \n7: ```bash\n8: python final/image_ops.py input.png output.png invert\n9: ```\n10: \n11: ## 功能说明\n12: \n13: 本提交实现图片读取、保存、缩放、旋转、裁剪、反色、模糊、边缘检测、中值滤波和统一调度。具体完成度以代码和报告为准。"
+      }
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "dimension": "代码实现与参数处理",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "resize_image 函数为何硬编码返回 (1, 1)？应如何根据 scale 参数正确计算新宽高？",
+      "focus": "验证学生是否理解图像缩放的核心逻辑及参数传递",
+      "evidence": "final/image_ops.py 第14行 return image.resize((1, 1)) 未使用 scale 参数，且验收测试 resize enlarge and shrink 失败"
+    }
+  ]
+}

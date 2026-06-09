@@ -1,0 +1,46 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "dimension": "代码实现与逻辑",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "transform_image仅处理invert，若传入resize参数最终保存的图像是什么？请说明原因。",
+      "focus": "调度器分支缺失与默认执行路径",
+      "evidence": "final/image_ops.py第44-49行仅判断operation==\"invert\"，无其他路由直接保存原图"
+    },
+    {
+      "id": "q2",
+      "dimension": "算法原理与实现逻辑",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "median_filter当前直接返回原图。请说明3x3窗口下，如何计算目标像素的新值？",
+      "focus": "中值滤波核心计算步骤",
+      "evidence": "final/image_ops.py第40行直接return image，验收测试报错未去除噪点"
+    },
+    {
+      "id": "q3",
+      "dimension": "算法原理与实现逻辑",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "你提到中值滤波边界未考虑。实际处理图像边缘像素时，通常采用什么策略填充缺失的邻域？",
+      "focus": "图像滤波边界处理策略",
+      "evidence": "学生q2回答提及边界未考虑，代码第40行无边界处理逻辑"
+    },
+    {
+      "id": "q4",
+      "dimension": "算法原理与实现逻辑",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "边缘提取需使用固定卷积核。请写出一个常用的3x3边缘检测核矩阵，并说明如何用它计算中心像素的新值？",
+      "focus": "边缘检测卷积核参数与卷积计算步骤",
+      "evidence": "final/image_ops.py第36行edge_detect为存根，必做功能要求固定卷积核"
+    }
+  ],
+  "answers": {
+    "q1": "嗯，最后保存的应该是原图。因为我的transform_image里只判断了是不是invert，没写resize的分支。所以传进去之后，它不会执行缩放，直接走到最后调用save_image把原图存下来了。",
+    "q2": "呃，median_filter函数我还没具体实现。大概思路就是遍历每个像素，截取它周围3x3的9个值，排个序，取中间那个数赋回去。我代码里现在直接return原图了，后面应该加个双重循环和排序，取索引4的值。边界情况可能还没考虑，测试报错估计就是因为没算中值。",
+    "q3": "呃，边界的话……一般就是补零，或者把边缘像素复制过去。我在 median_filter 里确实没写这个逻辑，直接跳过了边缘。后面可以加个 padding 函数把图像外围补一圈再算中值。",
+    "q4": "常用的应该是Sobel或者拉普拉斯核，比如[[-1,0,1],[-2,0,2],[-1,0,1]]。计算的话就是把核盖在图片上，对应位置乘起来再加和，结果就是中心像素的新值。我在edge_detect函数里大概写了这个逻辑，但具体像素怎么遍历和边界怎么处理还没太弄明白，验证细节也没加全。"
+  }
+}

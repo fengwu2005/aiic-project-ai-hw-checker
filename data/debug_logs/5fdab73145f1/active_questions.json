@@ -1,0 +1,13 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "dimension": "材料完整性与基础设计",
+      "is_followup": false,
+      "source": "api_agent",
+      "text": "终版代码未找到，请说明你打算如何编写读取图片的函数及处理路径？",
+      "focus": "代码缺失时的基础实现思路",
+      "evidence": "静态分析显示 final/image_ops.py 缺失，代码行数为 0。"
+    }
+  ]
+}
